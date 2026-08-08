@@ -1,0 +1,14 @@
+import { Complaint } from '../types';
+
+export const mockComplaints: Complaint[] = [
+  { id: 'C-1001', complainant: 'John Doe', against: 'Mobile Masters', subject: 'Defective phone received', date: '2023-10-24', status: 'Open', priority: 'High', type: 'Customer', details: 'Bought a Galaxy S23 Ultra but the screen has dead pixels out of the box.' },
+  { id: 'C-1002', complainant: 'Tech Haven', against: 'Jane Smith (Customer)', subject: 'Fraudulent return', date: '2023-10-22', status: 'In Review', priority: 'Medium', type: 'Shop', details: 'Customer returned an iPhone 14 but the device inside the box was an old iPhone X.' },
+  { id: 'C-1003', complainant: 'Alice Cooper', against: 'Cell Central', subject: 'Never shipped item', date: '2023-10-18', status: 'Resolved', priority: 'High', type: 'Customer', details: 'Paid for a Pixel 8 Pro two weeks ago, still no tracking number and shop is ignoring messages.' },
+  { id: 'C-1004', complainant: 'Connect Wireless', against: 'Platform Billing', subject: 'Double charged for subscription', date: '2023-10-25', status: 'Open', priority: 'Low', type: 'Shop', details: 'My credit card was charged twice for the Premium plan renewal this month.' },
+  { id: 'C-1005', complainant: 'Mark Johnson', against: 'Digital Deals', subject: 'Rude customer service', date: '2023-10-15', status: 'Closed', priority: 'Low', type: 'Customer', details: 'The shop owner was very rude when I asked about warranty details.' },
+  { id: 'C-1006', complainant: 'Elite Mobiles', against: 'Competitor (Tech Haven)', subject: 'Copying listing photos', date: '2023-10-20', status: 'Rejected', priority: 'Medium', type: 'Shop', details: 'Tech Haven is using our watermarked photos for their own listings.' },
+  { id: 'C-1007', complainant: 'Sarah Connor', against: 'Future Tech Exchange', subject: 'Wrong color sent', date: '2023-10-26', status: 'Open', priority: 'Low', type: 'Customer', details: 'I ordered the black version but received the white one.' },
+  { id: 'C-1008', complainant: 'Mobile Masters', against: 'Platform Search', subject: 'Listings not showing', date: '2023-10-21', status: 'Resolved', priority: 'High', type: 'Shop', details: 'Our newest iPhone 15 listings are not appearing in search results for the past 24 hours.' },
+  { id: 'C-1009', complainant: 'Tom Hardy', against: 'Gadget Galaxy', subject: 'Fake accessories', date: '2023-10-10', status: 'In Review', priority: 'High', type: 'Customer', details: 'The charger included with the phone is clearly a cheap knockoff, not OEM as advertised.' },
+  { id: 'C-1010', complainant: 'Quick Fix Phones', against: 'Platform Support', subject: 'Verification taking too long', date: '2023-10-26', status: 'Open', priority: 'Medium', type: 'Shop', details: 'Submitted verification documents 5 days ago and still pending.' }
+];
