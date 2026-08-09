@@ -18,7 +18,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 
 // ─── Shared DB row types (mirrors the Supabase schema) ────────────────────────
 
-export type UserRole = 'admin' | 'shopkeeper';
+export type UserRole = 'admin' | 'shopkeeper' | 'customer';
 
 export interface ProfileRow {
   id: string;
@@ -50,6 +50,17 @@ export interface ShopRow {
   avatar_url: string | null;
   total_listings: number;
   last_login: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CustomerRow {
+  id: string;
+  user_id: string | null;
+  login_email: string | null;
+  name: string;
+  phone: string;
+  email: string | null;
   created_at: string;
   updated_at: string;
 }

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import AdminApp from './admin/AdminApp';
 import CustomerApp from './CustomerApp';
 import { ShopkeeperSessionProvider } from './contexts/ShopkeeperSessionContext';
+import { CustomerSessionProvider } from './contexts/CustomerSessionContext';
 
 export default function App() {
   const [path, setPath] = useState(window.location.pathname);
@@ -18,7 +19,9 @@ export default function App() {
 
   return (
     <ShopkeeperSessionProvider>
-      <CustomerApp />
+      <CustomerSessionProvider>
+        <CustomerApp />
+      </CustomerSessionProvider>
     </ShopkeeperSessionProvider>
   );
 }

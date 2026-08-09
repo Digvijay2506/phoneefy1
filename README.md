@@ -50,6 +50,15 @@ policies and the two server-side functions described below.
   up in the shopkeeper's own inventory, and (once its status is "available")
   in the public marketplace on the home/search screens
 
+**Customers can create real accounts too** (landing page → Customer Login):
+- Sign up with name, mobile number, and a password of their choosing —
+  this is self-serve, no admin approval needed
+- Stored in a real `customers` table in Supabase, linked to a real Supabase
+  Auth login (password hashed and managed by Supabase, never stored in
+  plain text anywhere)
+- "Continue as Guest" skips all of this and goes straight to browsing, same
+  as before — an account is optional, not required to browse or buy
+
 ## What's real vs. what's still a placeholder
 
 Real and backed by Supabase: admin login/bootstrap, shopkeeper accounts,
@@ -87,9 +96,9 @@ JavaScript (not server-side), make sure your host redirects all paths to
 
 ## Your Supabase project
 
-- Tables: `profiles`, `shops`, `phones` — all with Row Level Security
+- Tables: `profiles`, `shops`, `phones`, `customers` — all with Row Level Security
 - Storage bucket: `phone-images` (public read, per-shop write access)
 - Edge Functions: `bootstrap-admin`, `create-shopkeeper`,
-  `reset-shopkeeper-password` — these hold the elevated permissions needed
-  to create/reset shopkeeper logins, so that power never lives in the
-  browser code
+  `reset-shopkeeper-password`, `customer-signup` — these hold the elevated
+  permissions needed to create/reset accounts, so that power never lives in
+  the browser code

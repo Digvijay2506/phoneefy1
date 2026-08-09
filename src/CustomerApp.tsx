@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useShopkeeperSession } from './contexts/ShopkeeperSessionContext';
+import { useCustomerSession } from './contexts/CustomerSessionContext';
 import { loadCatalog } from './data';
 
 // Components
@@ -7,6 +8,8 @@ import BottomNav from './components/BottomNav';
 import DashboardNav from './components/DashboardNav';
 
 // Customer Screens
+import LandingScreen from './screens/LandingScreen';
+import CustomerLoginScreen from './screens/CustomerLoginScreen';
 import HomeScreen from './screens/HomeScreen';
 import SearchScreen from './screens/SearchScreen';
 import DeviceDetailScreen from './screens/DeviceDetailScreen';
@@ -60,6 +63,7 @@ const DASH_NAV_TABS: DashboardTab[] = ['dashboard', 'inventory', 'subscription',
 
 export default function App() {
   const { shop, loading: sessionLoading, logout } = useShopkeeperSession();
+  const { customer, loading: customerSessionLoading, logout: customerLogout } = useCustomerSession();
 
   // Mode — driven by whether a shopkeeper is actually signed in
   const isDashboard = Boolean(shop);
@@ -71,12 +75,19 @@ export default function App() {
   }, []);
 
   // Customer side
+  const [hasEnteredCustomerMode, setHasEnteredCustomerMode] = useState(false);
+  const [showCustomerLogin, setShowCustomerLogin] = useState(false);
   const [customerTab, setCustomerTab] = useState<CustomerTab>('home');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPhoneId, setSelectedPhoneId] = useState<string | null>(null);
   const [selectedShopId, setSelectedShopId] = useState<string | null>(null);
   const [showAllShops, setShowAllShops] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
+
+  // If a customer session is restored on reload, skip straight past the landing screen
+  useEffect(() => {
+    if (customer) setHasEnteredCustomerMode(true);
+  }, [customer]);
 
   // Dashboard side
   const [dashTab, setDashTab] = useState<DashboardTab>('dashboard');
@@ -107,11 +118,12 @@ export default function App() {
     await logout();
     setDashScreen('dashboard');
     setDashTab('dashboard');
+    setHasEnteredCustomerMode(false);
   };
 
   // ─── Render: restoring an existing session ───────────────────────────────
 
-  if (sessionLoading) {
+  if (sessionLoading || customerSessionLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen" style={{ background: '#E8ECF0' }}>
         <div className="w-8 h-8 border-2 border-[#1A73E8] border-t-transparent rounded-full animate-spin" />
@@ -122,7 +134,36 @@ export default function App() {
   // ─── Render: Customer mode ────────────────────────────────────────────────
 
   if (!isDashboard) {
-    // Login screen
+    // Landing — choose Customer Login, Guest, or Shopkeeper before anything else
+    if (!hasEnteredCustomerMode && !showLogin && !showCustomerLogin) {
+      return (
+        <div className="flex justify-center min-h-screen" style={{ background: '#0D47A1' }}>
+          <div className="w-full max-w-[390px] relative">
+            <LandingScreen
+              onSelectCustomerLogin={() => setShowCustomerLogin(true)}
+              onSelectGuest={() => setHasEnteredCustomerMode(true)}
+              onSelectShopkeeper={() => setShowLogin(true)}
+            />
+          </div>
+        </div>
+      );
+    }
+
+    // Customer login/signup screen
+    if (showCustomerLogin) {
+      return (
+        <div className="flex justify-center min-h-screen" style={{ background: '#E8ECF0' }}>
+          <div className="w-full max-w-[390px] relative">
+            <CustomerLoginScreen
+              onDone={() => { setShowCustomerLogin(false); setHasEnteredCustomerMode(true); }}
+              onBack={() => setShowCustomerLogin(false)}
+            />
+          </div>
+        </div>
+      );
+    }
+
+    // Shopkeeper login screen
     if (showLogin) {
       return (
         <div className="flex justify-center min-h-screen" style={{ background: '#E8ECF0' }}>
@@ -212,31 +253,66 @@ export default function App() {
       );
     }
 
-    // Profile tab — show login prompt
+    // Profile tab
     if (customerTab === 'profile') {
       return (
         <div className="flex justify-center min-h-screen" style={{ background: '#E8ECF0' }}>
           <div className="w-full max-w-[390px] relative flex flex-col min-h-screen">
             <div className="flex-1 flex flex-col items-center justify-center gap-6 px-6 pb-20">
-              <div
-                className="w-20 h-20 rounded-3xl flex items-center justify-center"
-                style={{ background: 'linear-gradient(135deg, #1A73E8, #0D47A1)' }}
-              >
-                <span className="text-3xl">🏪</span>
-              </div>
-              <div className="text-center">
-                <h2 className="text-xl font-bold text-[#1A1D1F]">Shopkeeper Portal</h2>
-                <p className="text-sm text-[#6B7280] mt-2">
-                  Sign in to manage your inventory, analytics, offers, and subscriptions.
-                </p>
-              </div>
-              <button
-                onClick={() => setShowLogin(true)}
-                className="btn-tap w-full h-14 rounded-2xl text-white font-semibold text-base"
-                style={{ background: 'linear-gradient(135deg, #1A73E8, #0D47A1)' }}
-              >
-                Sign in as Shopkeeper
-              </button>
+              {customer ? (
+                <>
+                  <div
+                    className="w-20 h-20 rounded-3xl flex items-center justify-center text-2xl font-bold text-white"
+                    style={{ background: 'linear-gradient(135deg, #1A73E8, #0D47A1)' }}
+                  >
+                    {customer.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="text-center">
+                    <h2 className="text-xl font-bold text-[#1A1D1F]">{customer.name}</h2>
+                    <p className="text-sm text-[#6B7280] mt-1">{customer.phone}</p>
+                  </div>
+                  <button
+                    onClick={async () => { await customerLogout(); setHasEnteredCustomerMode(false); setCustomerTab('home'); }}
+                    className="btn-tap w-full h-12 rounded-2xl text-sm font-semibold text-red-500 bg-red-50 border border-red-200"
+                  >
+                    Sign Out
+                  </button>
+                  <button
+                    onClick={() => setShowLogin(true)}
+                    className="text-sm font-medium text-[#1A73E8]"
+                  >
+                    Are you a shopkeeper? Sign in here
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div
+                    className="w-20 h-20 rounded-3xl flex items-center justify-center"
+                    style={{ background: 'linear-gradient(135deg, #1A73E8, #0D47A1)' }}
+                  >
+                    <span className="text-3xl">👤</span>
+                  </div>
+                  <div className="text-center">
+                    <h2 className="text-xl font-bold text-[#1A1D1F]">You're browsing as a guest</h2>
+                    <p className="text-sm text-[#6B7280] mt-2">
+                      Sign in to save favourites, track offers, and check out faster.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setShowCustomerLogin(true)}
+                    className="btn-tap w-full h-14 rounded-2xl text-white font-semibold text-base"
+                    style={{ background: 'linear-gradient(135deg, #1A73E8, #0D47A1)' }}
+                  >
+                    Log In / Sign Up
+                  </button>
+                  <button
+                    onClick={() => setShowLogin(true)}
+                    className="btn-tap w-full h-14 rounded-2xl text-[#1A1D1F] font-semibold text-base bg-white border border-[#E5E7EB]"
+                  >
+                    Sign in as Shopkeeper
+                  </button>
+                </>
+              )}
             </div>
             <BottomNav activeTab={customerTab} onTabChange={(tab) => setCustomerTab(tab as CustomerTab)} />
           </div>

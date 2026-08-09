@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import {
   ArrowLeft, Moon, Globe, Bell, Lock, Shield, LogOut,
-  ChevronRight, Sun, Check,
+  ChevronRight, Sun, Check, Eye, EyeOff, Loader2,
 } from 'lucide-react';
+import { useShopkeeperSession } from '../../contexts/ShopkeeperSessionContext';
 
 interface SettingsScreenProps {
   onBack: () => void;
@@ -36,6 +37,7 @@ function SectionHeader({ label }: { label: string }) {
 }
 
 export default function SettingsScreen({ onBack, onLogout }: SettingsScreenProps) {
+  const { completePasswordChange } = useShopkeeperSession();
   const [darkMode, setDarkMode] = useState(false);
   const [language, setLanguage] = useState<Language>('English');
   const [showLanguagePicker, setShowLanguagePicker] = useState(false);
@@ -47,6 +49,44 @@ export default function SettingsScreen({ onBack, onLogout }: SettingsScreenProps
   const [twoFactor, setTwoFactor] = useState(false);
   const [biometrics, setBiometrics] = useState(true);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  // Change password modal
+  const [showChangePw, setShowChangePw] = useState(false);
+  const [newPw, setNewPw] = useState('');
+  const [confirmPw, setConfirmPw] = useState('');
+  const [showPw, setShowPw] = useState(false);
+  const [changing, setChanging] = useState(false);
+  const [changeError, setChangeError] = useState('');
+  const [changeSuccess, setChangeSuccess] = useState(false);
+
+  const closeChangePw = () => {
+    setShowChangePw(false);
+    setNewPw('');
+    setConfirmPw('');
+    setChangeError('');
+    setChangeSuccess(false);
+    setShowPw(false);
+  };
+
+  const handleChangePassword = async () => {
+    setChangeError('');
+    if (newPw.length < 8) {
+      setChangeError('Password must be at least 8 characters.');
+      return;
+    }
+    if (newPw !== confirmPw) {
+      setChangeError('Passwords do not match.');
+      return;
+    }
+    setChanging(true);
+    const result = await completePasswordChange(newPw);
+    setChanging(false);
+    if (result.error) {
+      setChangeError(result.error);
+      return;
+    }
+    setChangeSuccess(true);
+  };
 
   const settingsRow = (
     label: string,
@@ -150,6 +190,14 @@ export default function SettingsScreen({ onBack, onLogout }: SettingsScreenProps
         <SectionHeader label="Security" />
         <div className="rounded-2xl overflow-hidden mx-4 shadow-sm">
           {settingsRow(
+            'Change Password',
+            <div className="w-9 h-9 rounded-xl bg-[rgba(26,115,232,0.1)] flex items-center justify-center">
+              <Lock size={18} color="#1A73E8" />
+            </div>,
+            <ChevronRight size={16} color="#9CA3AF" />,
+            () => setShowChangePw(true)
+          )}
+          {settingsRow(
             'Two-Factor Authentication',
             <div className="w-9 h-9 rounded-xl bg-[rgba(26,115,232,0.1)] flex items-center justify-center">
               <Lock size={18} color="#1A73E8" />
@@ -240,6 +288,83 @@ export default function SettingsScreen({ onBack, onLogout }: SettingsScreenProps
                 Sign Out
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {/* Change Password Modal */}
+      {showChangePw && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-6" style={{ background: 'rgba(0,0,0,0.5)' }}>
+          <div className="bg-white rounded-3xl p-6 w-full max-w-[340px]">
+            {!changeSuccess ? (
+              <>
+                <h2 className="text-base font-bold text-[#1A1D1F] text-center">Change Password</h2>
+                <p className="text-sm text-[#6B7280] text-center mt-2 mb-5">
+                  Choose a new password for your shopkeeper account.
+                </p>
+
+                <div className="space-y-3">
+                  <div className="flex items-center bg-[#F5F7FA] rounded-xl overflow-hidden border border-transparent focus-within:border-[#1A73E8] h-[46px] px-4">
+                    <input
+                      type={showPw ? 'text' : 'password'}
+                      value={newPw}
+                      onChange={(e) => setNewPw(e.target.value)}
+                      placeholder="New password (min. 8 characters)"
+                      className="flex-1 text-sm text-[#1A1D1F] outline-none bg-transparent"
+                    />
+                    <button onClick={() => setShowPw((v) => !v)}>
+                      {showPw ? <EyeOff size={16} color="#9CA3AF" /> : <Eye size={16} color="#9CA3AF" />}
+                    </button>
+                  </div>
+                  <div className="flex items-center bg-[#F5F7FA] rounded-xl overflow-hidden border border-transparent focus-within:border-[#1A73E8] h-[46px] px-4">
+                    <input
+                      type={showPw ? 'text' : 'password'}
+                      value={confirmPw}
+                      onChange={(e) => setConfirmPw(e.target.value)}
+                      placeholder="Confirm new password"
+                      className="flex-1 text-sm text-[#1A1D1F] outline-none bg-transparent"
+                    />
+                  </div>
+                </div>
+
+                {changeError && (
+                  <p className="text-xs text-red-500 mt-3 text-center">{changeError}</p>
+                )}
+
+                <div className="flex gap-3 mt-6">
+                  <button
+                    onClick={closeChangePw}
+                    className="flex-1 h-11 rounded-2xl text-sm font-semibold text-[#1A1D1F] bg-[#F5F7FA]"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleChangePassword}
+                    disabled={changing}
+                    className="flex-1 h-11 rounded-2xl text-sm font-semibold text-white flex items-center justify-center gap-1.5"
+                    style={{ background: '#1A73E8', opacity: changing ? 0.7 : 1 }}
+                  >
+                    {changing && <Loader2 size={14} className="animate-spin" />}
+                    {changing ? 'Saving…' : 'Save'}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="w-14 h-14 rounded-full bg-green-50 border border-green-200 flex items-center justify-center mx-auto">
+                  <Check size={26} color="#16A34A" strokeWidth={3} />
+                </div>
+                <h2 className="text-base font-bold text-[#1A1D1F] text-center mt-4">Password Updated</h2>
+                <p className="text-sm text-[#6B7280] text-center mt-2">
+                  Your password has been changed. Use it the next time you log in.
+                </p>
+                <button
+                  onClick={closeChangePw}
+                  className="w-full h-11 rounded-2xl text-sm font-semibold text-white bg-[#1A73E8] mt-6"
+                >
+                  Done
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}
