@@ -8,7 +8,6 @@ import BottomNav from './components/BottomNav';
 import DashboardNav from './components/DashboardNav';
 
 // Customer Screens
-import LandingScreen from './screens/LandingScreen';
 import CustomerLoginScreen from './screens/CustomerLoginScreen';
 import HomeScreen from './screens/HomeScreen';
 import SearchScreen from './screens/SearchScreen';
@@ -74,8 +73,7 @@ export default function App() {
     loadCatalog();
   }, []);
 
-  // Customer side
-  const [hasEnteredCustomerMode, setHasEnteredCustomerMode] = useState(false);
+  // Customer side — browsing is open by default, no login wall
   const [showCustomerLogin, setShowCustomerLogin] = useState(false);
   const [customerTab, setCustomerTab] = useState<CustomerTab>('home');
   const [searchQuery, setSearchQuery] = useState('');
@@ -83,11 +81,6 @@ export default function App() {
   const [selectedShopId, setSelectedShopId] = useState<string | null>(null);
   const [showAllShops, setShowAllShops] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
-
-  // If a customer session is restored on reload, skip straight past the landing screen
-  useEffect(() => {
-    if (customer) setHasEnteredCustomerMode(true);
-  }, [customer]);
 
   // Dashboard side
   const [dashTab, setDashTab] = useState<DashboardTab>('dashboard');
@@ -118,7 +111,6 @@ export default function App() {
     await logout();
     setDashScreen('dashboard');
     setDashTab('dashboard');
-    setHasEnteredCustomerMode(false);
   };
 
   // ─── Render: restoring an existing session ───────────────────────────────
@@ -134,28 +126,13 @@ export default function App() {
   // ─── Render: Customer mode ────────────────────────────────────────────────
 
   if (!isDashboard) {
-    // Landing — choose Customer Login, Guest, or Shopkeeper before anything else
-    if (!hasEnteredCustomerMode && !showLogin && !showCustomerLogin) {
-      return (
-        <div className="flex justify-center min-h-screen" style={{ background: '#0D47A1' }}>
-          <div className="w-full max-w-[390px] relative">
-            <LandingScreen
-              onSelectCustomerLogin={() => setShowCustomerLogin(true)}
-              onSelectGuest={() => setHasEnteredCustomerMode(true)}
-              onSelectShopkeeper={() => setShowLogin(true)}
-            />
-          </div>
-        </div>
-      );
-    }
-
-    // Customer login/signup screen
+    // Customer login/signup screen (only reached if tapped from Profile)
     if (showCustomerLogin) {
       return (
         <div className="flex justify-center min-h-screen" style={{ background: '#E8ECF0' }}>
           <div className="w-full max-w-[390px] relative">
             <CustomerLoginScreen
-              onDone={() => { setShowCustomerLogin(false); setHasEnteredCustomerMode(true); }}
+              onDone={() => setShowCustomerLogin(false)}
               onBack={() => setShowCustomerLogin(false)}
             />
           </div>
@@ -163,7 +140,7 @@ export default function App() {
       );
     }
 
-    // Shopkeeper login screen
+    // Shopkeeper login screen (only reached if tapped from Profile)
     if (showLogin) {
       return (
         <div className="flex justify-center min-h-screen" style={{ background: '#E8ECF0' }}>
@@ -272,7 +249,7 @@ export default function App() {
                     <p className="text-sm text-[#6B7280] mt-1">{customer.phone}</p>
                   </div>
                   <button
-                    onClick={async () => { await customerLogout(); setHasEnteredCustomerMode(false); setCustomerTab('home'); }}
+                    onClick={async () => { await customerLogout(); setCustomerTab('home'); }}
                     className="btn-tap w-full h-12 rounded-2xl text-sm font-semibold text-red-500 bg-red-50 border border-red-200"
                   >
                     Sign Out
