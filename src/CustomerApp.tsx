@@ -79,7 +79,6 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPhoneId, setSelectedPhoneId] = useState<string | null>(null);
   const [selectedShopId, setSelectedShopId] = useState<string | null>(null);
-  const [showAllShops, setShowAllShops] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
 
   // Dashboard side
@@ -184,20 +183,6 @@ export default function App() {
       );
     }
 
-    // All Shops
-    if (showAllShops) {
-      return (
-        <div className="flex justify-center min-h-screen" style={{ background: '#E8ECF0' }}>
-          <div className="w-full max-w-[390px] relative">
-            <AllShopsScreen
-              onBack={() => setShowAllShops(false)}
-              onShopTap={(shopId) => { setShowAllShops(false); setSelectedShopId(shopId); }}
-            />
-          </div>
-        </div>
-      );
-    }
-
     // Search
     if (customerTab === 'search') {
       return (
@@ -215,8 +200,23 @@ export default function App() {
       );
     }
 
-    // Placeholder tabs (deals, shops)
-    if (customerTab === 'deals' || customerTab === 'shops') {
+    // Shops tab — full shop directory
+    if (customerTab === 'shops') {
+      return (
+        <div className="flex justify-center min-h-screen" style={{ background: '#E8ECF0' }}>
+          <div className="w-full max-w-[390px] relative">
+            <AllShopsScreen
+              activeTab={customerTab}
+              onTabChange={(tab) => setCustomerTab(tab as CustomerTab)}
+              onShopTap={(shopId) => setSelectedShopId(shopId)}
+            />
+          </div>
+        </div>
+      );
+    }
+
+    // Placeholder tabs (deals)
+    if (customerTab === 'deals') {
       return (
         <div className="flex justify-center min-h-screen" style={{ background: '#E8ECF0' }}>
           <div className="w-full max-w-[390px] relative">
@@ -305,9 +305,7 @@ export default function App() {
             activeTab={customerTab}
             onTabChange={(tab) => setCustomerTab(tab as CustomerTab)}
             onPhoneTap={(phone: Phone) => setSelectedPhoneId(phone.id)}
-            onShopTap={(shopId) => setSelectedShopId(shopId)}
             onSearchTap={(query) => { setSearchQuery(query ?? ''); setCustomerTab('search'); }}
-            onAllShopsTap={() => setShowAllShops(true)}
           />
         </div>
       </div>
