@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import { Home, Search, Store, Tag, User } from 'lucide-react';
 
 interface BottomNavProps {
@@ -32,15 +33,25 @@ export default function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
           <button
             key={item.key}
             onClick={() => onTabChange(item.key)}
-            className="nav-tap flex flex-col items-center justify-center gap-1 w-14 h-14 rounded-xl select-none"
+            className="relative flex flex-col items-center justify-center gap-1 w-14 h-14 rounded-xl select-none"
           >
-            <Icon
-              size={22}
-              strokeWidth={isActive ? 2.5 : 2}
-              color={isActive ? '#1A73E8' : '#6B7280'}
-            />
+            {isActive && (
+              <motion.div
+                layoutId="bottomNavPill"
+                className="absolute inset-x-1 inset-y-1 rounded-2xl"
+                style={{ background: 'rgba(26,115,232,0.08)' }}
+                transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+              />
+            )}
+            <motion.div
+              animate={isActive ? { y: -1, scale: 1.08 } : { y: 0, scale: 1 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+              className="relative z-10"
+            >
+              <Icon size={22} strokeWidth={isActive ? 2.5 : 2} color={isActive ? '#1A73E8' : '#6B7280'} />
+            </motion.div>
             <span
-              className="text-[11px] font-medium leading-none"
+              className="relative z-10 text-[11px] font-medium leading-none"
               style={{
                 color: isActive ? '#1A73E8' : '#6B7280',
                 fontWeight: isActive ? 600 : 500,
@@ -48,12 +59,6 @@ export default function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
             >
               {item.label}
             </span>
-            {isActive && (
-              <div
-                className="absolute bottom-1 w-6 h-0.5 rounded-full"
-                style={{ backgroundColor: '#1A73E8' }}
-              />
-            )}
           </button>
         );
       })}

@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import { Check } from 'lucide-react';
 import type { Phone } from '../data';
 import { formatPrice, getShopById } from '../data';
@@ -14,16 +15,23 @@ export default function PhoneCard({ phone, onTap, layout = 'grid' }: PhoneCardPr
 
   if (layout === 'list') {
     return (
-      <div
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        whileTap={{ scale: 0.98 }}
+        whileHover={{ y: -2, boxShadow: '0 10px 24px rgba(15,23,42,0.10)' }}
+        transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
         onClick={() => onTap(phone)}
-        className="card-tap bg-white rounded-2xl shadow-sm overflow-hidden flex gap-3.5 p-3.5 cursor-pointer"
+        className="bg-white rounded-2xl shadow-sm overflow-hidden flex gap-3.5 p-3.5 cursor-pointer"
       >
         <div className="w-[100px] h-[120px] rounded-xl overflow-hidden bg-gradient-to-br from-[#F5F7FA] to-[#E8ECF0] flex-shrink-0 relative">
-          <img
+          <motion.img
             src={phone.image}
             alt={phone.name}
             className="w-full h-full object-cover"
             loading="lazy"
+            whileHover={{ scale: 1.06 }}
+            transition={{ duration: 0.4 }}
             onError={(e) => {
               const target = e.target as HTMLImageElement;
               target.style.display = 'none';
@@ -49,21 +57,28 @@ export default function PhoneCard({ phone, onTap, layout = 'grid' }: PhoneCardPr
             View Details
           </button>
         </div>
-      </div>
+      </motion.div>
     );
   }
 
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, y: 16, scale: 0.97 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      whileTap={{ scale: 0.96 }}
+      whileHover={{ y: -4, boxShadow: '0 14px 28px rgba(15,23,42,0.12)' }}
+      transition={{ duration: 0.32, ease: [0.32, 0.72, 0, 1] }}
       onClick={() => onTap(phone)}
-      className="card-tap bg-white rounded-2xl shadow-sm overflow-hidden cursor-pointer"
+      className="bg-white rounded-2xl shadow-sm overflow-hidden cursor-pointer"
     >
       <div className="w-full h-[160px] relative overflow-hidden bg-gradient-to-br from-[#F5F7FA] to-[#E8ECF0]">
-        <img
+        <motion.img
           src={phone.image}
           alt={phone.name}
           className="w-full h-full object-cover"
           loading="lazy"
+          whileHover={{ scale: 1.08 }}
+          transition={{ duration: 0.45 }}
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.style.display = 'none';
@@ -88,6 +103,6 @@ export default function PhoneCard({ phone, onTap, layout = 'grid' }: PhoneCardPr
           EMI From {formatPrice(emiAmount)}/month
         </span>
       </div>
-    </div>
+    </motion.div>
   );
 }
