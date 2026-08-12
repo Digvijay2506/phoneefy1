@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Search, MapPin, Bell, Smartphone, TrendingUp, Store } from 'lucide-react';
-import { phones, shops, formatPrice, loadCatalog } from '../data';
-import type { Phone, Shop } from '../data';
+import { motion } from 'framer-motion';
+import { Search, MapPin, Bell, TrendingUp } from 'lucide-react';
+import { phones, formatPrice, loadCatalog } from '../data';
+import type { Phone } from '../data';
 import AdSlider from '../components/AdSlider';
 import BrandChip from '../components/BrandChip';
 import PhoneCard from '../components/PhoneCard';
@@ -12,18 +13,24 @@ interface HomeScreenProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
   onPhoneTap: (phone: Phone) => void;
-  onShopTap: (shopId: string) => void;
   onSearchTap: (query?: string) => void;
-  onAllShopsTap: () => void;
 }
+
+const sectionContainer = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.05 } },
+};
+
+const sectionItem = {
+  hidden: { opacity: 0, y: 18 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.32, 0.72, 0, 1] } },
+};
 
 export default function HomeScreen({
   activeTab,
   onTabChange,
   onPhoneTap,
-  onShopTap,
   onSearchTap,
-  onAllShopsTap,
 }: HomeScreenProps) {
   const [loading, setLoading] = useState(true);
 
@@ -36,12 +43,14 @@ export default function HomeScreen({
   }, []);
 
   const featuredPhones = phones.slice(0, 6);
-  const nearbyShops = shops.slice(0, 4);
 
   return (
-    <div className="screen-enter flex flex-col min-h-screen" style={{ background: '#F5F7FA' }}>
+    <div className="flex flex-col min-h-screen" style={{ background: '#F5F7FA' }}>
       {/* Header */}
-      <div
+      <motion.div
+        initial={{ opacity: 0, y: -14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
         className="flex items-start justify-between px-4 pt-12 pb-4"
         style={{ background: 'linear-gradient(160deg, #0D1B2A 0%, #1A3A5C 100%)' }}
       >
@@ -59,36 +68,47 @@ export default function HomeScreen({
         <button className="btn-tap w-10 h-10 rounded-full bg-white/10 flex items-center justify-center mt-1">
           <Bell size={20} color="white" />
         </button>
-      </div>
+      </motion.div>
 
       {/* Search Bar */}
-      <div className="px-4 -mt-5">
-        <button
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.1, ease: [0.32, 0.72, 0, 1] }}
+        className="px-4 -mt-5"
+      >
+        <motion.button
           onClick={() => onSearchTap()}
-          className="btn-tap w-full bg-white rounded-2xl shadow-sm h-12 flex items-center gap-3 px-4"
+          whileTap={{ scale: 0.98 }}
+          className="w-full bg-white rounded-2xl shadow-sm h-12 flex items-center gap-3 px-4"
         >
           <Search size={18} color="#6B7280" />
-          <span className="text-sm text-[#9CA3AF]">Search phones, brands, shops…</span>
-        </button>
-      </div>
+          <span className="text-sm text-[#9CA3AF]">Search phones, brands…</span>
+        </motion.button>
+      </motion.div>
 
       {/* Body */}
-      <div className="flex-1 overflow-y-auto no-scrollbar pb-20">
+      <motion.div
+        variants={sectionContainer}
+        initial="hidden"
+        animate="show"
+        className="flex-1 overflow-y-auto no-scrollbar pb-20"
+      >
         {/* Ad Slider */}
-        <div className="mt-5">
+        <motion.div variants={sectionItem} className="mt-5">
           <AdSlider />
-        </div>
+        </motion.div>
 
         {/* Brands */}
-        <div className="mt-5">
+        <motion.div variants={sectionItem} className="mt-5">
           <div className="flex items-center justify-between px-4 mb-3">
             <h2 className="text-base font-bold text-[#1A1D1F]">Browse by Brand</h2>
           </div>
           <BrandChip onTap={(brand) => onSearchTap(brand)} />
-        </div>
+        </motion.div>
 
         {/* Featured Phones */}
-        <div className="mt-5 px-4">
+        <motion.div variants={sectionItem} className="mt-5 px-4">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <TrendingUp size={16} color="#1A73E8" />
@@ -110,52 +130,8 @@ export default function HomeScreen({
               ))}
             </div>
           )}
-        </div>
-
-        {/* Nearby Shops */}
-        <div className="mt-5 px-4">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <Store size={16} color="#1A73E8" />
-              <h2 className="text-base font-bold text-[#1A1D1F]">Nearby Shops</h2>
-            </div>
-            <button onClick={onAllShopsTap} className="text-sm font-semibold text-[#1A73E8]">
-              See All
-            </button>
-          </div>
-
-          {loading ? (
-            <div className="space-y-3">
-              {[...Array(3)].map((_, i) => <SkeletonCard key={i} type="shop" />)}
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {nearbyShops.map((shop) => (
-                <div
-                  key={shop.id}
-                  onClick={() => onShopTap(shop.id)}
-                  className="card-tap bg-white rounded-2xl shadow-sm p-4 flex items-center gap-3 cursor-pointer"
-                >
-                  <div className="w-12 h-12 rounded-xl bg-[#1A73E8]/10 flex items-center justify-center font-bold text-[#1A73E8] text-base">
-                    {shop.name.charAt(0)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-[#1A1D1F] truncate">{shop.name}</p>
-                    <p className="text-xs text-[#6B7280] truncate">{shop.address}</p>
-                    <p className="text-xs text-[#1A73E8] font-medium mt-0.5">{shop.distance} · {shop.listingCount} listings</p>
-                  </div>
-                  <div className="text-center flex-shrink-0">
-                    <div className="flex items-center gap-0.5">
-                      <span className="text-sm font-bold text-[#1A1D1F]">{shop.rating}</span>
-                      <span className="text-yellow-400 text-xs">★</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       <BottomNav activeTab={activeTab} onTabChange={onTabChange} />
     </div>

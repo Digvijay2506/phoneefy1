@@ -1,4 +1,4 @@
-import { Tag, Store, User } from 'lucide-react';
+import { Tag, User } from 'lucide-react';
 import BottomNav from '../components/BottomNav';
 
 interface PlaceholderScreenProps {
@@ -9,7 +9,6 @@ interface PlaceholderScreenProps {
 
 const config: Record<string, { icon: React.ComponentType<{ size: number; color: string }>; label: string; description: string }> = {
   deals: { icon: Tag, label: 'Deals', description: 'Exclusive deals and offers coming soon!' },
-  shops: { icon: Store, label: 'Shops', description: 'Browse all shops near you coming soon!' },
   profile: { icon: User, label: 'Profile', description: 'Your buyer profile coming soon!' },
 };
 
