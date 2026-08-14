@@ -128,7 +128,7 @@ export default function DeviceDetailScreen({ phoneId, onBack, onShopTap }: Devic
 
       {/* Bottom CTA */}
       <div
-        className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[390px] px-4 py-4"
+        className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full sm:max-w-[430px] px-4 py-4"
         style={{
           background: 'rgba(245,247,250,0.95)',
           backdropFilter: 'blur(20px)',
