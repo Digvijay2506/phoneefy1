@@ -129,7 +129,7 @@ export default function App() {
     if (showCustomerLogin) {
       return (
         <div className="flex justify-center min-h-screen" style={{ background: '#E8ECF0' }}>
-          <div className="w-full max-w-[390px] relative">
+          <div className="w-full sm:max-w-[430px] relative">
             <CustomerLoginScreen
               onDone={() => setShowCustomerLogin(false)}
               onBack={() => setShowCustomerLogin(false)}
@@ -143,7 +143,7 @@ export default function App() {
     if (showLogin) {
       return (
         <div className="flex justify-center min-h-screen" style={{ background: '#E8ECF0' }}>
-          <div className="w-full max-w-[390px] relative">
+          <div className="w-full sm:max-w-[430px] relative">
             <ShopkeeperLoginScreen
               onLogin={() => setShowLogin(false)}
               onBack={() => setShowLogin(false)}
@@ -157,7 +157,7 @@ export default function App() {
     if (selectedPhoneId) {
       return (
         <div className="flex justify-center min-h-screen" style={{ background: '#E8ECF0' }}>
-          <div className="w-full max-w-[390px] relative">
+          <div className="w-full sm:max-w-[430px] relative">
             <DeviceDetailScreen
               phoneId={selectedPhoneId}
               onBack={() => setSelectedPhoneId(null)}
@@ -172,7 +172,7 @@ export default function App() {
     if (selectedShopId) {
       return (
         <div className="flex justify-center min-h-screen" style={{ background: '#E8ECF0' }}>
-          <div className="w-full max-w-[390px] relative">
+          <div className="w-full sm:max-w-[430px] relative">
             <ShopProfileScreen
               shopId={selectedShopId}
               onBack={() => setSelectedShopId(null)}
@@ -187,7 +187,7 @@ export default function App() {
     if (customerTab === 'search') {
       return (
         <div className="flex justify-center min-h-screen" style={{ background: '#E8ECF0' }}>
-          <div className="w-full max-w-[390px] relative">
+          <div className="w-full sm:max-w-[430px] relative">
             <SearchScreen
               initialQuery={searchQuery}
               activeTab={customerTab}
@@ -204,7 +204,7 @@ export default function App() {
     if (customerTab === 'shops') {
       return (
         <div className="flex justify-center min-h-screen" style={{ background: '#E8ECF0' }}>
-          <div className="w-full max-w-[390px] relative">
+          <div className="w-full sm:max-w-[430px] relative">
             <AllShopsScreen
               activeTab={customerTab}
               onTabChange={(tab) => setCustomerTab(tab as CustomerTab)}
@@ -219,7 +219,7 @@ export default function App() {
     if (customerTab === 'deals') {
       return (
         <div className="flex justify-center min-h-screen" style={{ background: '#E8ECF0' }}>
-          <div className="w-full max-w-[390px] relative">
+          <div className="w-full sm:max-w-[430px] relative">
             <PlaceholderScreen
               tabKey={customerTab}
               activeTab={customerTab}
@@ -234,7 +234,7 @@ export default function App() {
     if (customerTab === 'profile') {
       return (
         <div className="flex justify-center min-h-screen" style={{ background: '#E8ECF0' }}>
-          <div className="w-full max-w-[390px] relative flex flex-col min-h-screen">
+          <div className="w-full sm:max-w-[430px] relative flex flex-col min-h-screen">
             <div className="flex-1 flex flex-col items-center justify-center gap-6 px-6 pb-20">
               {customer ? (
                 <>
@@ -300,7 +300,7 @@ export default function App() {
     // Home
     return (
       <div className="flex justify-center min-h-screen" style={{ background: '#E8ECF0' }}>
-        <div className="w-full max-w-[390px] relative">
+        <div className="w-full sm:max-w-[430px] relative">
           <HomeScreen
             activeTab={customerTab}
             onTabChange={(tab) => setCustomerTab(tab as CustomerTab)}
@@ -318,7 +318,7 @@ export default function App() {
 
   return (
     <div className="flex justify-center min-h-screen" style={{ background: '#E8ECF0' }}>
-      <div className="w-full max-w-[390px] relative">
+      <div className="w-full sm:max-w-[430px] relative">
         {/* Screen routing */}
         {dashScreen === 'dashboard' && (
           <DashboardHome
