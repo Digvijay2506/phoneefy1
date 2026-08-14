@@ -91,7 +91,7 @@ function CreateOfferModal({ onClose, onCreate }: { onClose: () => void; onCreate
 
   return (
     <div className="fixed inset-0 z-50 flex items-end" style={{ background: 'rgba(0,0,0,0.5)' }}>
-      <div className="w-full max-w-[390px] mx-auto bg-white rounded-t-3xl p-5 pb-8" style={{ maxHeight: '90vh', overflowY: 'auto' }}>
+      <div className="w-full sm:max-w-[430px] mx-auto bg-white rounded-t-3xl p-5 pb-8" style={{ maxHeight: '90vh', overflowY: 'auto' }}>
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-base font-bold text-[#1A1D1F]">Create New Offer</h2>
           <button onClick={onClose} className="btn-tap w-8 h-8 rounded-full bg-[#F5F7FA] flex items-center justify-center">

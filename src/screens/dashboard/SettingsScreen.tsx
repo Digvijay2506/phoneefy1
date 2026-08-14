@@ -250,7 +250,7 @@ export default function SettingsScreen({ onBack, onLogout }: SettingsScreenProps
       {/* Language Picker Modal */}
       {showLanguagePicker && (
         <div className="fixed inset-0 z-50 flex items-end" style={{ background: 'rgba(0,0,0,0.5)' }}>
-          <div className="w-full max-w-[390px] mx-auto bg-white rounded-t-3xl p-5 pb-8">
+          <div className="w-full sm:max-w-[430px] mx-auto bg-white rounded-t-3xl p-5 pb-8">
             <h2 className="text-base font-bold text-[#1A1D1F] mb-4">Select Language</h2>
             <div className="space-y-2">
               {LANGUAGES.map((lang) => (
