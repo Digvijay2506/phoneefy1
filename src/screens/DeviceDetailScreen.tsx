@@ -1,4 +1,5 @@
-import { ArrowLeft, Check, Battery, Phone, MessageCircle, Shield, Cpu, HardDrive, Zap, Box, Receipt } from 'lucide-react';
+import { useState } from 'react';
+import { ArrowLeft, Check, Battery, Phone, MessageCircle, Shield, Cpu, HardDrive, Zap, Box } from 'lucide-react';
 import { getPhoneById, getShopById, formatPrice } from '../data';
 import EMICalculator from '../components/EMICalculator';
 import StarRating from '../components/StarRating';
@@ -12,39 +13,75 @@ interface DeviceDetailScreenProps {
 export default function DeviceDetailScreen({ phoneId, onBack, onShopTap }: DeviceDetailScreenProps) {
   const phone = getPhoneById(phoneId);
   const shop = phone ? getShopById(phone.shopId) : null;
+  const [activeImg, setActiveImg] = useState(0);
 
   if (!phone || !shop) return null;
 
-  const discount = Math.round(((phone.originalPrice - phone.price) / phone.originalPrice) * 100);
+  const allImages = phone.images ?? [phone.image];
 
   return (
     <div className="screen-enter flex flex-col min-h-screen" style={{ background: '#F5F7FA' }}>
-      {/* Image */}
-      <div className="relative w-full h-[320px] bg-gradient-to-br from-[#0D1B2A] to-[#1A3A5C]">
-        <img
-          src={phone.image}
-          alt={phone.name}
-          className="w-full h-full object-contain p-6"
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.style.opacity = '0.1';
-          }}
-        />
-        <button
-          onClick={onBack}
-          className="btn-tap absolute top-12 left-4 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center"
-        >
-          <ArrowLeft size={20} color="white" />
-        </button>
-        {phone.imeiVerified && (
-          <div className="absolute top-12 right-4 flex items-center gap-1 bg-[#1A7A4A] px-3 py-1.5 rounded-full">
-            <Shield size={12} color="white" />
-            <span className="text-[11px] font-semibold text-white">IMEI Verified</span>
+      {/* Image Gallery */}
+      <div className="relative w-full bg-gradient-to-br from-[#0D1B2A] to-[#1A3A5C]">
+        {/* Main image */}
+        <div className="relative w-full h-[300px]">
+          <img
+            src={allImages[activeImg]}
+            alt={phone.name}
+            className="w-full h-full object-contain p-6 transition-opacity duration-200"
+            onError={(e) => { (e.target as HTMLImageElement).style.opacity = '0.1'; }}
+          />
+          <button
+            onClick={onBack}
+            className="btn-tap absolute top-12 left-4 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center"
+          >
+            <ArrowLeft size={20} color="white" />
+          </button>
+          {phone.imeiVerified && (
+            <div className="absolute top-12 right-4 flex items-center gap-1 bg-[#1A7A4A] px-3 py-1.5 rounded-full">
+              <Shield size={12} color="white" />
+              <span className="text-[11px] font-semibold text-white">IMEI Verified</span>
+            </div>
+          )}
+          {/* Dot indicator */}
+          {allImages.length > 1 && (
+            <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
+              {allImages.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setActiveImg(i)}
+                  className="rounded-full transition-all"
+                  style={{
+                    width: i === activeImg ? 20 : 6,
+                    height: 6,
+                    background: i === activeImg ? 'white' : 'rgba(255,255,255,0.4)',
+                  }}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Thumbnail strip — only shown when there are multiple images */}
+        {allImages.length > 1 && (
+          <div className="flex gap-2 px-4 pb-4 overflow-x-auto no-scrollbar">
+            {allImages.map((img, i) => (
+              <button
+                key={i}
+                onClick={() => setActiveImg(i)}
+                className="flex-shrink-0 rounded-xl overflow-hidden transition-all"
+                style={{
+                  width: 58, height: 58,
+                  border: i === activeImg ? '2px solid white' : '2px solid transparent',
+                  opacity: i === activeImg ? 1 : 0.55,
+                  background: 'rgba(255,255,255,0.08)',
+                }}
+              >
+                <img src={img} alt={`view ${i + 1}`} className="w-full h-full object-contain p-1" />
+              </button>
+            ))}
           </div>
         )}
-        <div className="absolute bottom-4 right-4 bg-[#EF4444] px-2.5 py-1 rounded-lg">
-          <span className="text-xs font-bold text-white">{discount}% OFF</span>
-        </div>
       </div>
 
       {/* Content */}
@@ -59,9 +96,11 @@ export default function DeviceDetailScreen({ phoneId, onBack, onShopTap }: Devic
             <span className="text-base text-[#9CA3AF] line-through">{formatPrice(phone.originalPrice)}</span>
           </div>
 
-          <span className="mt-2 inline-block bg-[rgba(26,122,74,0.1)] text-[#1A7A4A] text-xs font-semibold px-3 py-1 rounded-full">
-            Save {formatPrice(phone.originalPrice - phone.price)}
-          </span>
+          {phone.originalPrice > phone.price && (
+            <span className="mt-2 inline-block bg-[rgba(26,122,74,0.1)] text-[#1A7A4A] text-xs font-semibold px-3 py-1 rounded-full">
+              Save {formatPrice(phone.originalPrice - phone.price)}
+            </span>
+          )}
         </div>
 
         {/* Specs */}
