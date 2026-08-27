@@ -22,7 +22,8 @@ export interface Phone {
   batteryHealth?: number;
   accessories: string[];
   shopId: string;
-  image: string;
+  image: string;      // first image (for cards)
+  images: string[];   // all images (for detail gallery)
   listedDaysAgo: number;
 }
 
@@ -98,6 +99,7 @@ function phoneRowToPhone(row: PhoneRow): Phone {
     accessories,
     shopId: row.shop_id,
     image: row.images?.[0] || FALLBACK_IMAGE,
+    images: row.images?.length ? row.images : [FALLBACK_IMAGE],
     listedDaysAgo: row.created_at ? daysAgo(row.created_at) : 0,
   };
 }
