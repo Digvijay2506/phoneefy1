@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 
 export default function ShopProfile() {
-  const { shops, updateShop, resetShopPassword } = useShops();
+  const { shops, updateShop, resetShopPassword, generateResetLink, deleteShop } = useShops();
   const [location, setLocation] = useLocation();
   const { toast } = useToast();
 
@@ -24,6 +24,10 @@ export default function ShopProfile() {
   const [resetting, setResetting] = useState(false);
   const [generatedPw, setGeneratedPw] = useState<string | null>(null);
   const [showNewPw, setShowNewPw] = useState(false);
+  const [generatedLink, setGeneratedLink] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   if (!shop) {
     return (
@@ -36,6 +40,29 @@ export default function ShopProfile() {
       </div>
     );
   }
+
+  const handleGenerateLink = async () => {
+    setResetting(true);
+    const outcome = await generateResetLink(shop.id);
+    setResetting(false);
+    if ('error' in outcome) {
+      toast({ title: 'Could not generate link', description: outcome.error, variant: 'destructive' });
+      return;
+    }
+    setGeneratedLink(outcome.resetLink);
+    toast({ title: 'Reset link ready', description: 'Send this link to the shopkeeper. It expires in 1 hour.' });
+  };
+
+  const handleDeleteShop = async () => {
+    setDeleting(true);
+    const outcome = await deleteShop(shop.id);
+    setDeleting(false);
+    if (outcome && 'error' in outcome) {
+      toast({ title: 'Could not delete shop', description: outcome.error, variant: 'destructive' });
+      return;
+    }
+    setLocation('/shops');
+  };
 
   const handleResetPassword = async () => {
     setResetting(true);
@@ -104,7 +131,7 @@ export default function ShopProfile() {
             variant="outline"
             size="sm"
             className="border-border bg-card"
-            onClick={() => { setGeneratedPw(null); setShowNewPw(false); setShowResetModal(true); }}
+            onClick={() => { setGeneratedLink(null); setGeneratedPw(null); setShowNewPw(false); setShowResetModal(true); }}
           >
             <KeyRound className="w-4 h-4 mr-1" /> Reset Password
           </Button>
@@ -127,6 +154,14 @@ export default function ShopProfile() {
               <Power className="w-4 h-4 mr-1" /> Enable Login
             </Button>
           )}
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-destructive/40 text-destructive hover:bg-destructive/10 bg-card font-semibold"
+            onClick={() => setShowDeleteConfirm(true)}
+          >
+            🗑 Delete Shop
+          </Button>
         </div>
       </div>
 
@@ -238,49 +273,72 @@ export default function ShopProfile() {
         </div>
       </div>
 
-      {/* Reset Password Modal */}
+      {/* Reset Password Modal — now sends a link, not a temp password */}
       {showResetModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
           <div className="bg-card border border-border rounded-xl p-6 w-full max-w-md shadow-2xl space-y-4">
             <h3 className="text-base font-semibold flex items-center gap-2">
-              <KeyRound className="w-4 h-4 text-primary" /> Reset Password — {shop.name}
+              <KeyRound className="w-4 h-4 text-primary" /> Generate Reset Link — {shop.name}
             </h3>
-
-            {!generatedPw ? (
+            {!generatedLink ? (
               <>
                 <p className="text-sm text-muted-foreground">
-                  This generates a brand-new temporary password for this shopkeeper. Their current password stops
-                  working immediately, and they'll be required to set a new one on their next login.
+                  This generates a secure link that expires in <strong>1 hour</strong>. Send it to the shopkeeper via WhatsApp or SMS — they click it and set their own new password. You never see what they choose.
                 </p>
                 <div className="flex gap-3 justify-end pt-2">
-                  <Button variant="outline" className="border-border bg-card" onClick={() => setShowResetModal(false)}>
-                    Cancel
-                  </Button>
-                  <Button onClick={handleResetPassword} disabled={resetting}>
-                    {resetting ? 'Generating…' : 'Generate New Password'}
+                  <Button variant="outline" className="border-border bg-card" onClick={() => setShowResetModal(false)}>Cancel</Button>
+                  <Button onClick={handleGenerateLink} disabled={resetting}>
+                    {resetting ? 'Generating…' : 'Generate Link'}
                   </Button>
                 </div>
               </>
             ) : (
               <>
-                <div className="bg-secondary/30 border border-border rounded-lg p-3 flex items-center justify-between">
-                  <span className="font-mono text-sm text-foreground">
-                    {showNewPw ? generatedPw : '••••••••••'}
-                  </span>
-                  <button type="button" onClick={() => setShowNewPw((v) => !v)} className="text-muted-foreground hover:text-foreground">
-                    {showNewPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
+                <div className="bg-secondary/30 border border-border rounded-lg p-3 break-all text-xs font-mono text-foreground">
+                  {generatedLink}
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  This password is shown only once. Share it with the shopkeeper now.
-                </p>
-                <div className="flex justify-end pt-1">
-                  <Button onClick={() => { setShowResetModal(false); setGeneratedPw(null); setShowNewPw(false); }}>
-                    Done
+                <p className="text-xs text-muted-foreground">Copy and send this link. It expires in 1 hour and is single-use.</p>
+                <div className="flex gap-3 justify-end pt-1">
+                  <Button variant="outline" className="border-border bg-card gap-1.5" onClick={() => {
+                    navigator.clipboard.writeText(generatedLink);
+                    setCopied(true); setTimeout(() => setCopied(false), 2000);
+                  }}>
+                    {copied ? '✓ Copied' : 'Copy Link'}
                   </Button>
+                  <Button onClick={() => { setShowResetModal(false); setGeneratedLink(null); }}>Done</Button>
                 </div>
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Delete Shop Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
+          <div className="bg-card border border-destructive/30 rounded-xl p-6 w-full max-w-md shadow-2xl space-y-4">
+            <h3 className="text-base font-semibold text-destructive">⚠️ Delete Shop — {shop.name}</h3>
+            <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 space-y-2">
+              <p className="text-sm font-semibold text-destructive">This action is permanent and cannot be undone.</p>
+              <ul className="text-sm text-muted-foreground space-y-1 list-disc pl-4">
+                <li>All phone listings from this shop will be deleted</li>
+                <li>The shopkeeper's login will be removed</li>
+                <li>Their data cannot be recovered</li>
+              </ul>
+            </div>
+            <p className="text-sm text-muted-foreground">Are you absolutely sure you want to delete <strong>{shop.name}</strong>?</p>
+            <div className="flex gap-3 justify-end pt-2">
+              <Button variant="outline" className="border-border bg-card" onClick={() => setShowDeleteConfirm(false)}>
+                Cancel
+              </Button>
+              <Button
+                className="bg-destructive hover:bg-destructive/90 text-white"
+                onClick={handleDeleteShop}
+                disabled={deleting}
+              >
+                {deleting ? 'Deleting…' : 'Yes, Delete Shop'}
+              </Button>
+            </div>
           </div>
         </div>
       )}
