@@ -60,6 +60,8 @@ interface ShopContextType {
   ) => Promise<{ shop: Shop; credentials: NewShopCredentials } | { error: string }>;
   updateShop: (id: string, updates: Partial<Shop>) => Promise<void>;
   resetShopPassword: (id: string) => Promise<{ tempPassword: string } | { error: string }>;
+  generateResetLink: (id: string) => Promise<{ resetLink: string } | { error: string }>;
+  deleteShop: (id: string) => Promise<{ error: string } | void>;
 }
 
 const ShopContext = createContext<ShopContextType | undefined>(undefined);
@@ -155,9 +157,40 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const generateResetLink = async (id: string): Promise<{ resetLink: string } | { error: string }> => {
+    try {
+      const res = await fetch(`${FUNCTIONS_URL}/generate-reset-link`, {
+        method: 'POST',
+        headers: await authHeaders(),
+        body: JSON.stringify({ shopId: id }),
+      });
+      const body = await res.json();
+      if (!res.ok) return { error: body.error || 'Could not generate reset link.' };
+      await refreshShops();
+      return { resetLink: body.resetLink };
+    } catch (e) {
+      return { error: e instanceof Error ? e.message : 'Network error' };
+    }
+  };
+
+  const deleteShop = async (id: string): Promise<{ error: string } | void> => {
+    try {
+      const res = await fetch(`${FUNCTIONS_URL}/delete-shop`, {
+        method: 'POST',
+        headers: await authHeaders(),
+        body: JSON.stringify({ shopId: id }),
+      });
+      const body = await res.json();
+      if (!res.ok) return { error: body.error || 'Could not delete shop.' };
+      await refreshShops();
+    } catch (e) {
+      return { error: e instanceof Error ? e.message : 'Network error' };
+    }
+  };
+
   return (
     <ShopContext.Provider
-      value={{ shops, loading, refreshShops, createShop, updateShop, resetShopPassword }}
+      value={{ shops, loading, refreshShops, createShop, updateShop, resetShopPassword, generateResetLink, deleteShop }}
     >
       {children}
     </ShopContext.Provider>
