@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { ArrowLeft, Check, Battery, Phone, MessageCircle, Shield, Cpu, HardDrive, Zap, Box } from 'lucide-react';
 import { getPhoneById, getShopById, formatPrice } from '../data';
-import EMICalculator from '../components/EMICalculator';
 import StarRating from '../components/StarRating';
 
 interface DeviceDetailScreenProps {
@@ -89,18 +88,10 @@ export default function DeviceDetailScreen({ phoneId, onBack, onShopTap }: Devic
         {/* Main Card */}
         <div className="bg-white rounded-3xl shadow-sm p-5">
           <h1 className="text-xl font-bold text-[#1A1D1F]">{phone.name}</h1>
-          <p className="text-sm text-[#6B7280] mt-1">{phone.storage} · {phone.ram} RAM · {phone.color}</p>
 
           <div className="flex items-baseline gap-2 mt-3">
             <span className="text-2xl font-bold text-[#1A1D1F]">{formatPrice(phone.price)}</span>
-            <span className="text-base text-[#9CA3AF] line-through">{formatPrice(phone.originalPrice)}</span>
           </div>
-
-          {phone.originalPrice > phone.price && (
-            <span className="mt-2 inline-block bg-[rgba(26,122,74,0.1)] text-[#1A7A4A] text-xs font-semibold px-3 py-1 rounded-full">
-              Save {formatPrice(phone.originalPrice - phone.price)}
-            </span>
-          )}
         </div>
 
         {/* Specs */}
@@ -142,6 +133,14 @@ export default function DeviceDetailScreen({ phoneId, onBack, onShopTap }: Devic
           </div>
         </div>
 
+        {/* Description */}
+        {phone.description && (
+          <div className="bg-white rounded-3xl shadow-sm p-5 mt-3">
+            <h3 className="text-sm font-bold text-[#1A1D1F] mb-3">Description</h3>
+            <p className="text-sm text-[#6B7280] leading-relaxed">{phone.description}</p>
+          </div>
+        )}
+
         {/* Shop Card */}
         <div
           onClick={() => onShopTap(shop.id)}
@@ -159,10 +158,8 @@ export default function DeviceDetailScreen({ phoneId, onBack, onShopTap }: Devic
           </div>
         </div>
 
-        {/* EMI */}
-        <div className="mt-3">
-          <EMICalculator price={phone.price} />
-        </div>
+        {/* Bottom padding spacer */}
+        <div className="h-4" />
       </div>
 
       {/* Bottom CTA */}

@@ -24,6 +24,7 @@ export interface Phone {
   shopId: string;
   image: string;      // first image (for cards)
   images: string[];   // all images (for detail gallery)
+  description: string;
   listedDaysAgo: number;
 }
 
@@ -100,6 +101,7 @@ function phoneRowToPhone(row: PhoneRow): Phone {
     shopId: row.shop_id,
     image: row.images?.[0] || FALLBACK_IMAGE,
     images: row.images?.length ? row.images : [FALLBACK_IMAGE],
+    description: row.description || '',
     listedDaysAgo: row.created_at ? daysAgo(row.created_at) : 0,
   };
 }
