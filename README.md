@@ -1,3 +1,4 @@
+cd /workspaces/phoneefy1
 # Phoneefy — Merged App (Admin Panel + Shopkeeper/Customer App)
 
 This is your two Phoneefy projects merged into **one app**, backed by a real
