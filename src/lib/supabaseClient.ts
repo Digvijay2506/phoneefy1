@@ -96,11 +96,50 @@ export interface PhoneRow {
 
 // ─── Small shared helpers ──────────────────────────────────────────────────────
 
-/** Upload a data-url / File to the public phone-images bucket, scoped to a shop's folder. */
+/** Compress an image File to max 800px wide and ~70% JPEG quality before uploading. */
+async function compressImage(file: File): Promise<File> {
+  return new Promise((resolve) => {
+    const MAX_PX = 1200;
+    const QUALITY = 0.72;
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let { width, height } = img;
+      if (width > MAX_PX || height > MAX_PX) {
+        if (width >= height) { height = Math.round((height / width) * MAX_PX); width = MAX_PX; }
+        else { width = Math.round((width / height) * MAX_PX); height = MAX_PX; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      const ctx = canvas.getContext('2d')!;
+      ctx.drawImage(img, 0, 0, width, height);
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) { resolve(file); return; }
+          // Only use compressed version if it's actually smaller
+          if (blob.size < file.size) {
+            resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }));
+          } else {
+            resolve(file);
+          }
+        },
+        'image/jpeg',
+        QUALITY,
+      );
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+    img.src = url;
+  });
+}
+
+/** Upload a data-url / File to the public phone-images bucket, scoped to a shop's folder.
+ *  Automatically compresses the image before uploading (max 1200px, ~72% JPEG quality). */
 export async function uploadPhoneImage(shopId: string, file: File): Promise<string> {
-  const ext = file.name.split('.').pop() || 'jpg';
+  const compressed = await compressImage(file);
+  const ext = compressed.name.split('.').pop() || 'jpg';
   const path = `${shopId}/${crypto.randomUUID()}.${ext}`;
-  const { error } = await supabase.storage.from('phone-images').upload(path, file, {
+  const { error } = await supabase.storage.from('phone-images').upload(path, compressed, {
     cacheControl: '3600',
     upsert: false,
   });
