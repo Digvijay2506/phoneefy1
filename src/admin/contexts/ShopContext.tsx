@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase, type ShopRow } from '@/lib/supabaseClient';
 import { Shop } from '../types';
-import { useAuth } from './AuthContext';
 
 const FUNCTIONS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
 
@@ -77,9 +76,8 @@ async function authHeaders() {
 }
 
 export function ShopProvider({ children }: { children: React.ReactNode }) {
-  const { isLoggedIn, loading: authLoading } = useAuth();
   const [shops, setShops] = useState<Shop[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const refreshShops = useCallback(async () => {
     setLoading(true);
@@ -94,13 +92,8 @@ export function ShopProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (authLoading || !isLoggedIn) {
-      setShops([]);
-      setLoading(false);
-      return;
-    }
-    void refreshShops();
-  }, [authLoading, isLoggedIn, refreshShops]);
+    refreshShops();
+  }, [refreshShops]);
 
   const createShop = async (
     input: NewShopInput,
