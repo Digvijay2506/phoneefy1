@@ -26,9 +26,16 @@ declare global {
 }
 
 function track(eventName: string, params?: Record<string, string | number | boolean>) {
-  if (typeof window.gtag === 'function') {
-    window.gtag('event', eventName, params ?? {});
-  }
+  let attempts = 0;
+  const send = () => {
+    if (typeof window.gtag === 'function') {
+      window.gtag('event', eventName, params ?? {});
+    } else if (attempts < 10) {
+      attempts++;
+      setTimeout(send, 300);
+    }
+  };
+  send();
 }
 
 // ─── Customer-facing events ───────────────────────────────────────────────────
