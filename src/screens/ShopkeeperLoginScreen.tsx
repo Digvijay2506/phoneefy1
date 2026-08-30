@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Eye, EyeOff, Store, ArrowLeft, ShieldCheck } from 'lucide-react';
 import { useShopkeeperSession } from '@/contexts/ShopkeeperSessionContext';
+import { trackShopkeeperLogin } from '@/lib/analytics';
 
 interface ShopkeeperLoginScreenProps {
   onLogin: () => void;
@@ -10,7 +11,7 @@ interface ShopkeeperLoginScreenProps {
 type Step = 'login' | 'change-password';
 
 export default function ShopkeeperLoginScreen({ onLogin, onBack }: ShopkeeperLoginScreenProps) {
-  const { loginWithId, completePasswordChange } = useShopkeeperSession();
+  const { loginWithId, completePasswordChange, shop } = useShopkeeperSession();
 
   const [step, setStep] = useState<Step>('login');
   const [loginId, setLoginId] = useState('');
@@ -41,6 +42,7 @@ export default function ShopkeeperLoginScreen({ onLogin, onBack }: ShopkeeperLog
       setStep('change-password');
       return;
     }
+    trackShopkeeperLogin(shop?.name ?? loginId);
     onLogin();
   };
 

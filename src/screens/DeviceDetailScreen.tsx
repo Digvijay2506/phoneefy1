@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft, Check, Battery, Phone, MessageCircle, Shield, Cpu, HardDrive, Zap, Box } from 'lucide-react';
 import { getPhoneById, getShopById, formatPrice } from '../data';
 import StarRating from '../components/StarRating';
+import { trackPhoneViewed, trackPhoneImageSwiped, trackWhatsAppClick, trackCallClick } from '@/lib/analytics';
 
 interface DeviceDetailScreenProps {
   phoneId: string;
@@ -13,6 +14,11 @@ export default function DeviceDetailScreen({ phoneId, onBack, onShopTap }: Devic
   const phone = getPhoneById(phoneId);
   const shop = phone ? getShopById(phone.shopId) : null;
   const [activeImg, setActiveImg] = useState(0);
+
+  // Track phone view when screen opens
+  useEffect(() => {
+    if (phone && shop) trackPhoneViewed(phone.name, phone.brand, phone.price, shop.name);
+  }, []);  // eslint-disable-line
 
   if (!phone || !shop) return null;
 
@@ -48,7 +54,7 @@ export default function DeviceDetailScreen({ phoneId, onBack, onShopTap }: Devic
               {allImages.map((_, i) => (
                 <button
                   key={i}
-                  onClick={() => setActiveImg(i)}
+                  onClick={() => { setActiveImg(i); trackPhoneImageSwiped(phone.name, i); }}
                   className="rounded-full transition-all"
                   style={{
                     width: i === activeImg ? 20 : 6,
@@ -67,7 +73,7 @@ export default function DeviceDetailScreen({ phoneId, onBack, onShopTap }: Devic
             {allImages.map((img, i) => (
               <button
                 key={i}
-                onClick={() => setActiveImg(i)}
+                onClick={() => { setActiveImg(i); trackPhoneImageSwiped(phone.name, i); }}
                 className="flex-shrink-0 rounded-xl overflow-hidden transition-all"
                 style={{
                   width: 58, height: 58,
@@ -173,13 +179,13 @@ export default function DeviceDetailScreen({ phoneId, onBack, onShopTap }: Devic
       >
         <div className="flex gap-3">
           <button
-            onClick={() => window.open(`tel:${shop.phone}`)}
+            onClick={() => { window.open(`tel:${shop.phone}`); trackCallClick(phone.name, shop.name); }}
             className="btn-tap w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center border border-[#E5E7EB]"
           >
             <Phone size={22} color="#1A73E8" />
           </button>
           <button
-            onClick={() => window.open(`https://wa.me/${shop.phone.replace(/\D/g, '')}`)}
+            onClick={() => { window.open(`https://wa.me/${shop.phone.replace(/\D/g, '')}`); trackWhatsAppClick(phone.name, shop.name, phone.price); }}
             className="btn-tap flex-1 h-14 rounded-2xl font-semibold text-base text-white flex items-center justify-center gap-2"
             style={{ background: '#25D366' }}
           >

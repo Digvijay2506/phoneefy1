@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { MapPin, Phone, Star, MessageCircle, Store } from 'lucide-react';
 import { shops, loadCatalog } from '../data';
 import BottomNav from '../components/BottomNav';
+import { trackShopViewed, trackWhatsAppClick, trackCallClick } from '@/lib/analytics';
 
 interface AllShopsScreenProps {
   activeTab: string;
@@ -62,7 +63,7 @@ export default function AllShopsScreen({ activeTab, onTabChange, onShopTap }: Al
             variants={item}
             whileHover={{ y: -2, boxShadow: '0 10px 24px rgba(15,23,42,0.10)' }}
             whileTap={{ scale: 0.985 }}
-            onClick={() => onShopTap(shop.id)}
+            onClick={() => { onShopTap(shop.id); trackShopViewed(shop.name, shop.distance); }}
             className="bg-white rounded-2xl shadow-sm p-4 cursor-pointer"
           >
             <div className="flex items-start gap-3.5">
@@ -98,14 +99,14 @@ export default function AllShopsScreen({ activeTab, onTabChange, onShopTap }: Al
 
             <div className="flex gap-2 mt-3.5 pt-3.5 border-t border-[#F5F7FA]">
               <button
-                onClick={(e) => { e.stopPropagation(); window.open(`tel:${shop.phone}`); }}
+                onClick={(e) => { e.stopPropagation(); window.open(`tel:${shop.phone}`); trackCallClick('shop_directory', shop.name); }}
                 className="btn-tap flex-1 flex items-center justify-center gap-1.5 h-9 rounded-xl text-xs font-semibold"
                 style={{ background: 'rgba(26,115,232,0.08)', color: '#1A73E8' }}
               >
                 <Phone size={13} /> Call
               </button>
               <button
-                onClick={(e) => { e.stopPropagation(); window.open(`https://wa.me/${shop.phone.replace(/\D/g, '')}`); }}
+                onClick={(e) => { e.stopPropagation(); window.open(`https://wa.me/${shop.phone.replace(/\D/g, '')}`); trackWhatsAppClick('shop_directory', shop.name, 0); }}
                 className="btn-tap flex-1 flex items-center justify-center gap-1.5 h-9 rounded-xl text-xs font-semibold"
                 style={{ background: 'rgba(37,211,102,0.08)', color: '#25D366' }}
               >

@@ -5,6 +5,7 @@ import type { Phone, Shop } from '../data';
 import PhoneCard from '../components/PhoneCard';
 import SkeletonCard from '../components/SkeletonCard';
 import BottomNav from '../components/BottomNav';
+import { trackSearch } from '@/lib/analytics';
 
 interface SearchScreenProps {
   initialQuery?: string;
@@ -49,6 +50,7 @@ export default function SearchScreen({
       setPhones(result.phones);
       setShops(result.shops);
       setLoading(false);
+      if (q.trim()) trackSearch(q.trim(), result.phones.length + result.shops.length);
     });
   };
 

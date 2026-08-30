@@ -3,6 +3,7 @@ import { ArrowLeft, Camera, Check, X, Loader2 } from 'lucide-react';
 import { addPhone, updatePhone } from '../../store/phoneStore';
 import type { InventoryPhone, Condition, PhoneFormInput } from '../../store/phoneStore';
 import { logActivity } from '../../store/activityStore';
+import { trackPhoneListed } from '@/lib/analytics';
 
 interface PhoneFormScreenProps {
   phone?: InventoryPhone;
@@ -153,6 +154,7 @@ export default function PhoneFormScreen({ phone, onSave, onBack }: PhoneFormScre
       } else {
         await addPhone(input);
         logActivity('added', form.brand, form.model, `₹${form.price.toLocaleString()} · ${form.condition}`);
+        trackPhoneListed(form.phoneName, form.brand, form.price);
       }
       setSaving(false);
       onSave();

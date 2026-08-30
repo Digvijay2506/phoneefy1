@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Eye, EyeOff, User, ArrowLeft } from 'lucide-react';
 import { useCustomerSession } from '@/contexts/CustomerSessionContext';
+import { trackCustomerSignup, trackCustomerLogin } from '@/lib/analytics';
 
 interface CustomerLoginScreenProps {
   onDone: () => void;
@@ -46,6 +47,7 @@ export default function CustomerLoginScreen({ onDone, onBack }: CustomerLoginScr
       const result = await signUp(name, phone, password);
       setLoading(false);
       if (result.error) { setError(result.error); return; }
+      trackCustomerSignup();
       onDone();
       return;
     }
@@ -54,6 +56,7 @@ export default function CustomerLoginScreen({ onDone, onBack }: CustomerLoginScr
     const result = await login(phone, password);
     setLoading(false);
     if (result.error) { setError(result.error); return; }
+    trackCustomerLogin();
     onDone();
   };
 
