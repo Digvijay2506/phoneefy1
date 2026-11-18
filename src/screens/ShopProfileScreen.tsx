@@ -3,14 +3,17 @@ import { getShopById, getPhonesByShop, formatPrice } from '../data';
 import type { Phone } from '../data';
 import PhoneCard from '../components/PhoneCard';
 import StarRating from '../components/StarRating';
+import BottomNav from '../components/BottomNav';
 
 interface ShopProfileScreenProps {
   shopId: string;
+  activeTab: string;
+  onTabChange: (tab: string) => void;
   onBack: () => void;
   onPhoneTap: (phone: Phone) => void;
 }
 
-export default function ShopProfileScreen({ shopId, onBack, onPhoneTap }: ShopProfileScreenProps) {
+export default function ShopProfileScreen({ shopId, activeTab, onTabChange, onBack, onPhoneTap }: ShopProfileScreenProps) {
   const shop = getShopById(shopId);
   const phones = getPhonesByShop(shopId);
 
@@ -28,6 +31,7 @@ export default function ShopProfileScreen({ shopId, onBack, onPhoneTap }: ShopPr
       <div className="relative px-4 pt-12 pb-6" style={{ background: 'linear-gradient(160deg, #0D1B2A 0%, #1A3A5C 100%)' }}>
         <button
           onClick={onBack}
+          aria-label="Back"
           className="btn-tap w-10 h-10 rounded-full bg-white/10 flex items-center justify-center mb-6"
         >
           <ArrowLeft size={20} color="white" />
@@ -93,7 +97,7 @@ export default function ShopProfileScreen({ shopId, onBack, onPhoneTap }: ShopPr
       </div>
 
       {/* Listings */}
-      <div className="px-4 mt-5 pb-6">
+      <div className="px-4 mt-5 pb-24">
         <h2 className="text-base font-bold text-[#1A1D1F] mb-3">
           Available Phones ({phones.length})
         </h2>
@@ -109,6 +113,9 @@ export default function ShopProfileScreen({ shopId, onBack, onPhoneTap }: ShopPr
           </div>
         )}
       </div>
+
+      {/* Home / Search / Shops / Deals / Profile — always visible */}
+      <BottomNav activeTab={activeTab} onTabChange={onTabChange} />
     </div>
   );
 }

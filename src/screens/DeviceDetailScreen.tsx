@@ -1,19 +1,24 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Check, Battery, Phone, MessageCircle, Shield, Cpu, HardDrive, Zap, Box } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { ArrowLeft, Check, Battery, Phone, MessageCircle, Shield, Cpu, HardDrive, Zap, Box, X, Maximize2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getPhoneById, getShopById, formatPrice } from '../data';
 import StarRating from '../components/StarRating';
+import BottomNav from '../components/BottomNav';
 import { trackPhoneViewed, trackPhoneImageSwiped, trackWhatsAppClick, trackCallClick } from '@/lib/analytics';
 
 interface DeviceDetailScreenProps {
   phoneId: string;
+  activeTab: string;
+  onTabChange: (tab: string) => void;
   onBack: () => void;
   onShopTap: (shopId: string) => void;
 }
 
-export default function DeviceDetailScreen({ phoneId, onBack, onShopTap }: DeviceDetailScreenProps) {
+export default function DeviceDetailScreen({ phoneId, activeTab, onTabChange, onBack, onShopTap }: DeviceDetailScreenProps) {
   const phone = getPhoneById(phoneId);
   const shop = phone ? getShopById(phone.shopId) : null;
   const [activeImg, setActiveImg] = useState(0);
+  const [zoom, setZoom] = useState(false); // full-screen photo viewer
 
   // Track phone view when screen opens
   useEffect(() => {
@@ -29,15 +34,17 @@ export default function DeviceDetailScreen({ phoneId, onBack, onShopTap }: Devic
       {/* Image Gallery */}
       <div className="relative w-full bg-gradient-to-br from-[#0D1B2A] to-[#1A3A5C]">
         {/* Main image */}
-        <div className="relative w-full h-[300px]">
+        <div className="relative w-full h-[400px]">
           <img
             src={allImages[activeImg]}
             alt={phone.name}
-            className="w-full h-full object-contain p-6 transition-opacity duration-200"
+            className="w-full h-full object-contain p-3 cursor-zoom-in transition-opacity duration-200"
+            onClick={() => setZoom(true)}
             onError={(e) => { (e.target as HTMLImageElement).style.opacity = '0.1'; }}
           />
           <button
             onClick={onBack}
+            aria-label="Back"
             className="btn-tap absolute top-12 left-4 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center"
           >
             <ArrowLeft size={20} color="white" />
@@ -48,6 +55,10 @@ export default function DeviceDetailScreen({ phoneId, onBack, onShopTap }: Devic
               <span className="text-[11px] font-semibold text-white">IMEI Verified</span>
             </div>
           )}
+          {/* Zoom hint */}
+          <div className="absolute bottom-3 right-3 flex items-center gap-1 bg-black/40 text-white text-[10px] font-medium px-2 py-1 rounded-full pointer-events-none">
+            <Maximize2 size={10} /> Tap photo to zoom
+          </div>
           {/* Dot indicator */}
           {allImages.length > 1 && (
             <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
@@ -90,7 +101,7 @@ export default function DeviceDetailScreen({ phoneId, onBack, onShopTap }: Devic
       </div>
 
       {/* Content */}
-      <div className="flex-1 px-4 pb-28 -mt-4 relative">
+      <div className="flex-1 px-4 pb-44 -mt-4 relative">
         {/* Main Card */}
         <div className="bg-white rounded-3xl shadow-sm p-5">
           <h1 className="text-xl font-bold text-[#1A1D1F]">{phone.name}</h1>
@@ -170,7 +181,7 @@ export default function DeviceDetailScreen({ phoneId, onBack, onShopTap }: Devic
 
       {/* Bottom CTA */}
       <div
-        className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full sm:max-w-[430px] px-4 py-4"
+        className="fixed bottom-16 left-1/2 -translate-x-1/2 w-full sm:max-w-[430px] px-4 py-3 z-40"
         style={{
           background: 'rgba(245,247,250,0.95)',
           backdropFilter: 'blur(20px)',
@@ -194,6 +205,53 @@ export default function DeviceDetailScreen({ phoneId, onBack, onShopTap }: Devic
           </button>
         </div>
       </div>
+
+      {/* Home / Search / Shops / Deals / Profile — always visible */}
+      <BottomNav activeTab={activeTab} onTabChange={onTabChange} />
+
+      {/* Full-screen photo viewer */}
+      {zoom && createPortal(
+        <div
+          className="fixed inset-0 z-[100] bg-black flex items-center justify-center"
+          onClick={() => setZoom(false)}
+        >
+          <img
+            src={allImages[activeImg]}
+            alt={phone.name}
+            className="max-w-full max-h-full object-contain select-none"
+            onClick={(e) => e.stopPropagation()}
+          />
+          <button
+            aria-label="Close photo"
+            onClick={() => setZoom(false)}
+            className="absolute top-12 right-4 w-11 h-11 rounded-full bg-white/15 flex items-center justify-center"
+          >
+            <X size={22} color="white" />
+          </button>
+          {allImages.length > 1 && (
+            <>
+              <button
+                aria-label="Previous photo"
+                onClick={(e) => { e.stopPropagation(); setActiveImg((i) => (i - 1 + allImages.length) % allImages.length); }}
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/15 flex items-center justify-center"
+              >
+                <ChevronLeft size={24} color="white" />
+              </button>
+              <button
+                aria-label="Next photo"
+                onClick={(e) => { e.stopPropagation(); setActiveImg((i) => (i + 1) % allImages.length); }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/15 flex items-center justify-center"
+              >
+                <ChevronRight size={24} color="white" />
+              </button>
+              <div className="absolute bottom-8 left-0 right-0 text-center text-white/80 text-xs font-medium">
+                {activeImg + 1} / {allImages.length}
+              </div>
+            </>
+          )}
+        </div>,
+        document.body,
+      )}
     </div>
   );
 }

@@ -75,7 +75,7 @@ function SoldCard({
           <img
             src={phone.images[0] || '/phones/iphone-13.jpg'}
             alt={phone.model}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain"
             onError={(e) => { (e.target as HTMLImageElement).style.opacity = '0.3'; }}
           />
         </div>

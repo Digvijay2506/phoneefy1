@@ -163,7 +163,7 @@ export default function DashboardHome({ onNavigate, shopName, ownerName }: Dashb
             {available.slice(0, 2).map((phone) => (
               <div key={phone.id} className="flex items-center gap-3 mt-3 pt-3 border-t border-[#F5F7FA]">
                 <div className="w-10 h-10 rounded-xl bg-[#F5F7FA] overflow-hidden flex-shrink-0">
-                  <img src={phone.images[0]} alt={phone.model} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.opacity = '0.3'; }} />
+                  <img src={phone.images[0]} alt={phone.model} className="w-full h-full object-contain" onError={(e) => { (e.target as HTMLImageElement).style.opacity = '0.3'; }} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-bold text-[#1A1D1F] truncate">{phone.brand} {phone.model}</p>

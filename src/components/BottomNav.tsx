@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import { Home, Search, Store, Tag, User } from 'lucide-react';
 
@@ -15,9 +16,12 @@ const navItems = [
 ];
 
 export default function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
-  return (
+  // Rendered straight onto <body> so no parent (animations, transforms) can ever
+  // push the menu out of place — it stays pinned to the bottom of the screen.
+  return createPortal(
     <nav
-      className="fixed bottom-0 w-full sm:max-w-[430px] z-50 flex justify-around items-center h-16 px-2"
+      aria-label="Main menu"
+      className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full sm:max-w-[430px] z-50 flex justify-around items-center h-16 px-2"
       style={{
         background: 'rgba(255,255,255,0.95)',
         backdropFilter: 'blur(20px)',
@@ -62,6 +66,7 @@ export default function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
           </button>
         );
       })}
-    </nav>
+    </nav>,
+    document.body,
   );
 }

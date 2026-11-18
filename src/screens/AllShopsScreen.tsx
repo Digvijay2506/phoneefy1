@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, Phone, Star, MessageCircle, Store } from 'lucide-react';
+import { MapPin, Phone, Star, MessageCircle, Store, ArrowLeft } from 'lucide-react';
 import { shops, loadCatalog } from '../data';
 import BottomNav from '../components/BottomNav';
 import { trackShopViewed, trackWhatsAppClick, trackCallClick } from '@/lib/analytics';
@@ -8,6 +8,7 @@ import { trackShopViewed, trackWhatsAppClick, trackCallClick } from '@/lib/analy
 interface AllShopsScreenProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
+  onBack?: () => void;
   onShopTap: (shopId: string) => void;
 }
 
@@ -21,7 +22,7 @@ const item = {
   show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.32, 0.72, 0, 1] } },
 };
 
-export default function AllShopsScreen({ activeTab, onTabChange, onShopTap }: AllShopsScreenProps) {
+export default function AllShopsScreen({ activeTab, onTabChange, onBack, onShopTap }: AllShopsScreenProps) {
   const [, forceRender] = useState(0);
 
   useEffect(() => {
@@ -42,6 +43,15 @@ export default function AllShopsScreen({ activeTab, onTabChange, onShopTap }: Al
         className="flex items-center gap-3 px-4 pt-12 pb-5"
         style={{ background: 'linear-gradient(160deg, #0D1B2A 0%, #1A3A5C 100%)' }}
       >
+        {onBack && (
+          <button
+            onClick={onBack}
+            aria-label="Back"
+            className="btn-tap w-10 h-10 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0"
+          >
+            <ArrowLeft size={20} color="white" />
+          </button>
+        )}
         <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
           <Store size={20} color="white" />
         </div>

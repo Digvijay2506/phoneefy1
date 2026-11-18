@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Search, X, Store, SlidersHorizontal, LayoutGrid, List } from 'lucide-react';
+import { Search, X, Store, SlidersHorizontal, LayoutGrid, List, ArrowLeft } from 'lucide-react';
 import { searchPhones, loadCatalog } from '../data';
 import type { Phone, Shop } from '../data';
 import PhoneCard from '../components/PhoneCard';
@@ -11,6 +11,7 @@ interface SearchScreenProps {
   initialQuery?: string;
   activeTab: string;
   onTabChange: (tab: string) => void;
+  onBack?: () => void;
   onPhoneTap: (phone: Phone) => void;
   onShopTap: (shopId: string) => void;
 }
@@ -27,6 +28,7 @@ export default function SearchScreen({
   initialQuery = '',
   activeTab,
   onTabChange,
+  onBack,
   onPhoneTap,
   onShopTap,
 }: SearchScreenProps) {
@@ -71,7 +73,17 @@ export default function SearchScreen({
         className="sticky top-0 z-20 px-4 pt-12 pb-3"
         style={{ background: 'rgba(245,247,250,0.97)', backdropFilter: 'blur(12px)' }}
       >
-        <div className="flex items-center gap-2.5 bg-white rounded-2xl shadow-sm px-4 h-12 border border-[#E5E7EB]">
+        <div className="flex items-center gap-2.5">
+        {onBack && (
+          <button
+            onClick={onBack}
+            aria-label="Back"
+            className="btn-tap flex-shrink-0 w-12 h-12 rounded-2xl bg-white shadow-sm border border-[#E5E7EB] flex items-center justify-center"
+          >
+            <ArrowLeft size={20} color="#1A1D1F" />
+          </button>
+        )}
+        <div className="flex-1 min-w-0 flex items-center gap-2.5 bg-white rounded-2xl shadow-sm px-4 h-12 border border-[#E5E7EB]">
           <Search size={18} color="#6B7280" />
           <input
             ref={inputRef}
@@ -86,6 +98,7 @@ export default function SearchScreen({
               <X size={16} color="#9CA3AF" />
             </button>
           )}
+        </div>
         </div>
 
         {/* Filters */}

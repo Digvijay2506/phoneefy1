@@ -28,7 +28,7 @@ export default function PhoneCard({ phone, onTap, layout = 'grid' }: PhoneCardPr
           <motion.img
             src={phone.image}
             alt={phone.name}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain"
             loading="lazy"
             whileHover={{ scale: 1.06 }}
             transition={{ duration: 0.4 }}
@@ -71,11 +71,11 @@ export default function PhoneCard({ phone, onTap, layout = 'grid' }: PhoneCardPr
       onClick={() => onTap(phone)}
       className="bg-white rounded-2xl shadow-sm overflow-hidden cursor-pointer"
     >
-      <div className="w-full h-[160px] relative overflow-hidden bg-gradient-to-br from-[#F5F7FA] to-[#E8ECF0]">
+      <div className="w-full h-[190px] relative overflow-hidden bg-gradient-to-br from-[#F5F7FA] to-[#E8ECF0]">
         <motion.img
           src={phone.image}
           alt={phone.name}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-contain"
           loading="lazy"
           whileHover={{ scale: 1.08 }}
           transition={{ duration: 0.45 }}

@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
+import { ArrowLeft } from 'lucide-react';
 import { useShopkeeperSession } from './contexts/ShopkeeperSessionContext';
 import { useCustomerSession } from './contexts/CustomerSessionContext';
 import { loadCatalog } from './data';
+import { useAppHistory } from './lib/useAppHistory';
 
 // Components
 import BottomNav from './components/BottomNav';
@@ -34,6 +36,7 @@ import SoldInventoryScreen from './screens/dashboard/SoldInventoryScreen';
 import ActivityHistoryScreen from './screens/dashboard/ActivityHistoryScreen';
 
 // Store
+import { getPhoneById as getInventoryPhone } from './store/phoneStore';
 import type { InventoryPhone } from './store/phoneStore';
 import type { Phone } from './data';
 
@@ -57,6 +60,21 @@ type DashboardScreen =
 
 // Which dashboard tabs show the bottom nav
 const DASH_NAV_TABS: DashboardTab[] = ['dashboard', 'inventory', 'subscription', 'profile'];
+
+// Everything that decides "which screen am I on" — saved in the browser history
+// so the phone's back gesture moves between screens instead of leaving the site.
+interface AppRoute {
+  m: 'c' | 'd'; // c = customer side, d = shopkeeper dashboard
+  tab: CustomerTab;
+  ph: string | null;
+  sh: string | null;
+  lg: boolean;
+  cl: boolean;
+  q: string;
+  ds: DashboardScreen;
+  dt: DashboardTab;
+  ep: string | null;
+}
 
 // ─── App ─────────────────────────────────────────────────────────────────────
 
@@ -86,6 +104,40 @@ export default function App() {
   const [dashScreen, setDashScreen] = useState<DashboardScreen>('dashboard');
   const [editingPhone, setEditingPhone] = useState<InventoryPhone | null>(null);
 
+  // ─── Back button / back gesture support ─────────────────────────────────────
+
+  const route: AppRoute = isDashboard
+    ? { m: 'd', tab: 'home', ph: null, sh: null, lg: false, cl: false, q: '', ds: dashScreen, dt: dashTab, ep: editingPhone?.id ?? null }
+    : { m: 'c', tab: customerTab, ph: selectedPhoneId, sh: selectedShopId, lg: showLogin, cl: showCustomerLogin, q: searchQuery, ds: 'dashboard', dt: 'dashboard', ep: null };
+
+  const applyRoute = (r: AppRoute) => {
+    setCustomerTab(r.tab);
+    setSelectedPhoneId(r.ph);
+    setSelectedShopId(r.sh);
+    setShowLogin(r.lg);
+    setShowCustomerLogin(r.cl);
+    setSearchQuery(r.q);
+    const ep = r.ep ? getInventoryPhone(r.ep) ?? null : null;
+    setEditingPhone(ep);
+    setDashTab(r.dt);
+    setDashScreen(r.ds === 'editPhone' && !ep ? 'inventory' : r.ds);
+  };
+
+  const { back } = useAppHistory<AppRoute>(route, applyRoute, !(sessionLoading || customerSessionLoading));
+
+  // Bottom menu (Home / Search / Shops / Deals / Profile) — works from every customer page
+  const goToTab = (tab: string) => {
+    if (tab === customerTab && !selectedPhoneId && !selectedShopId) return;
+    setSelectedPhoneId(null);
+    setSelectedShopId(null);
+    setShowLogin(false);
+    setShowCustomerLogin(false);
+    setSearchQuery('');
+    setCustomerTab(tab as CustomerTab);
+  };
+
+  const backToHome = () => back(() => setCustomerTab('home'));
+
   // ─── Handlers ────────────────────────────────────────────────────────────────
 
   const goToDashScreen = (screen: string) => {
@@ -102,8 +154,8 @@ export default function App() {
   };
 
   const handleDashBack = () => {
-    // Return to whichever nav tab was active
-    setDashScreen(dashTab);
+    // Go back one screen (falls back to the active nav tab)
+    back(() => setDashScreen(dashTab));
   };
 
   const handleLogout = async () => {
@@ -131,8 +183,8 @@ export default function App() {
         <div className="flex justify-center min-h-screen" style={{ background: '#E8ECF0' }}>
           <div className="w-full sm:max-w-[430px] relative">
             <CustomerLoginScreen
-              onDone={() => setShowCustomerLogin(false)}
-              onBack={() => setShowCustomerLogin(false)}
+              onDone={() => back(() => setShowCustomerLogin(false))}
+              onBack={() => back(() => setShowCustomerLogin(false))}
             />
           </div>
         </div>
@@ -146,7 +198,7 @@ export default function App() {
           <div className="w-full sm:max-w-[430px] relative">
             <ShopkeeperLoginScreen
               onLogin={() => setShowLogin(false)}
-              onBack={() => setShowLogin(false)}
+              onBack={() => back(() => setShowLogin(false))}
             />
           </div>
         </div>
@@ -160,7 +212,9 @@ export default function App() {
           <div className="w-full sm:max-w-[430px] relative">
             <DeviceDetailScreen
               phoneId={selectedPhoneId}
-              onBack={() => setSelectedPhoneId(null)}
+              activeTab={customerTab}
+              onTabChange={goToTab}
+              onBack={() => back(() => setSelectedPhoneId(null))}
               onShopTap={(shopId) => { setSelectedPhoneId(null); setSelectedShopId(shopId); }}
             />
           </div>
@@ -175,7 +229,9 @@ export default function App() {
           <div className="w-full sm:max-w-[430px] relative">
             <ShopProfileScreen
               shopId={selectedShopId}
-              onBack={() => setSelectedShopId(null)}
+              activeTab={customerTab}
+              onTabChange={goToTab}
+              onBack={() => back(() => setSelectedShopId(null))}
               onPhoneTap={(phone: Phone) => { setSelectedShopId(null); setSelectedPhoneId(phone.id); }}
             />
           </div>
@@ -191,7 +247,8 @@ export default function App() {
             <SearchScreen
               initialQuery={searchQuery}
               activeTab={customerTab}
-              onTabChange={(tab) => { setCustomerTab(tab as CustomerTab); setSearchQuery(''); }}
+              onTabChange={goToTab}
+              onBack={backToHome}
               onPhoneTap={(phone: Phone) => setSelectedPhoneId(phone.id)}
               onShopTap={(shopId) => setSelectedShopId(shopId)}
             />
@@ -207,7 +264,8 @@ export default function App() {
           <div className="w-full sm:max-w-[430px] relative">
             <AllShopsScreen
               activeTab={customerTab}
-              onTabChange={(tab) => setCustomerTab(tab as CustomerTab)}
+              onTabChange={goToTab}
+              onBack={backToHome}
               onShopTap={(shopId) => setSelectedShopId(shopId)}
             />
           </div>
@@ -223,7 +281,8 @@ export default function App() {
             <PlaceholderScreen
               tabKey={customerTab}
               activeTab={customerTab}
-              onTabChange={(tab) => setCustomerTab(tab as CustomerTab)}
+              onTabChange={goToTab}
+              onBack={backToHome}
             />
           </div>
         </div>
@@ -235,6 +294,13 @@ export default function App() {
       return (
         <div className="flex justify-center min-h-screen" style={{ background: '#E8ECF0' }}>
           <div className="w-full sm:max-w-[430px] relative flex flex-col min-h-screen">
+            <button
+              onClick={backToHome}
+              aria-label="Back"
+              className="btn-tap absolute top-12 left-4 w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center z-10"
+            >
+              <ArrowLeft size={20} color="#1A1D1F" />
+            </button>
             <div className="flex-1 flex flex-col items-center justify-center gap-6 px-6 pb-20">
               {customer ? (
                 <>
@@ -291,7 +357,7 @@ export default function App() {
                 </>
               )}
             </div>
-            <BottomNav activeTab={customerTab} onTabChange={(tab) => setCustomerTab(tab as CustomerTab)} />
+            <BottomNav activeTab={customerTab} onTabChange={goToTab} />
           </div>
         </div>
       );
@@ -303,7 +369,7 @@ export default function App() {
         <div className="w-full sm:max-w-[430px] relative">
           <HomeScreen
             activeTab={customerTab}
-            onTabChange={(tab) => setCustomerTab(tab as CustomerTab)}
+            onTabChange={goToTab}
             onPhoneTap={(phone: Phone) => setSelectedPhoneId(phone.id)}
             onSearchTap={(query) => { setSearchQuery(query ?? ''); setCustomerTab('search'); }}
           />
@@ -349,7 +415,7 @@ export default function App() {
         {/* Phone form screens */}
         {dashScreen === 'addPhone' && (
           <PhoneFormScreen
-            onSave={() => setDashScreen('inventory')}
+            onSave={() => back(() => setDashScreen('inventory'))}
             onBack={handleDashBack}
           />
         )}
@@ -357,7 +423,7 @@ export default function App() {
         {dashScreen === 'editPhone' && editingPhone && (
           <PhoneFormScreen
             phone={editingPhone}
-            onSave={() => { setEditingPhone(null); setDashScreen('inventory'); }}
+            onSave={() => back(() => { setEditingPhone(null); setDashScreen('inventory'); })}
             onBack={handleDashBack}
           />
         )}

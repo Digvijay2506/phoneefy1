@@ -214,7 +214,7 @@ export default function PhoneFormScreen({ phone, onSave, onBack }: PhoneFormScre
           <div className="grid grid-cols-3 gap-2">
             {images.map((img) => (
               <div key={img.key} className="relative w-full aspect-square rounded-xl overflow-hidden bg-white border border-[#E5E7EB]">
-                <img src={img.url} alt="" className="w-full h-full object-cover" />
+                <img src={img.url} alt="" className="w-full h-full object-contain" />
                 <button
                   onClick={() => removeImage(img.key)}
                   className="btn-tap absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center"
