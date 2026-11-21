@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { ArrowRight, BadgeCheck, Check, MapPin, Navigation, Store } from 'lucide-react';
+import { BadgeCheck, Check, MapPin, Navigation, Smartphone, Store } from 'lucide-react';
 import { formatDistance } from '../data';
 import type { ShopWithDistance } from '../data';
 import type { LocationStatus } from '../lib/useUserLocation';
@@ -12,6 +12,9 @@ interface NearbyShopsProps {
   onShopTap: (shopId: string) => void;
   onSeeAll: () => void;
 }
+
+// Two full cards + a peek of the third on any phone (≈38% of the screen width each)
+const CARD_WIDTH = 'w-[38vw] min-w-[128px] max-w-[168px]';
 
 /** The little "show nearest first" prompt under the section title */
 export function LocationChip({
@@ -55,11 +58,11 @@ function ShopCard({ shop, onTap }: { shop: ShopWithDistance; onTap: () => void }
       aria-label={`Open ${shop.name}`}
       onClick={onTap}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onTap(); } }}
-      className="w-[80%] max-w-[320px] flex-shrink-0 snap-start bg-white rounded-2xl shadow-sm overflow-hidden cursor-pointer active:scale-[0.99] transition-transform"
+      className={`${CARD_WIDTH} flex-shrink-0 snap-start bg-white rounded-2xl shadow-sm overflow-hidden cursor-pointer active:scale-[0.99] transition-transform`}
       data-testid="shop-card"
     >
       {/* Cover photo */}
-      <div className="relative h-[112px] bg-gradient-to-br from-[#1A3A5C] to-[#0D1B2A]">
+      <div className="relative h-[84px] bg-gradient-to-br from-[#1A3A5C] to-[#0D1B2A]">
         {shop.coverImage ? (
           <img
             src={shop.coverImage}
@@ -70,55 +73,52 @@ function ShopCard({ shop, onTap }: { shop: ShopWithDistance; onTap: () => void }
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <Store size={34} color="rgba(255,255,255,0.35)" />
+            <Store size={26} color="rgba(255,255,255,0.35)" />
           </div>
         )}
         {shop.verified && (
           <span
-            className="absolute top-2 right-2 w-6 h-6 rounded-full bg-[#1A7A4A] flex items-center justify-center shadow"
             title="Verified shop"
+            className="absolute top-1.5 left-1.5 inline-flex items-center gap-0.5 bg-[#1A7A4A] text-white text-[9px] font-semibold px-1.5 py-0.5 rounded-md shadow"
           >
-            <Check size={14} color="white" strokeWidth={3} />
+            <Check size={9} strokeWidth={3} /> Verified
           </span>
         )}
       </div>
 
-      <div className="px-3 pb-3">
-        {/* Logo overlapping the cover */}
-        <div className="-mt-6 w-12 h-12 rounded-full border-2 border-white bg-[#1A73E8] overflow-hidden flex items-center justify-center text-white font-bold shadow">
-          {shop.logo ? (
+      <div className="px-2.5 pt-2 pb-2.5">
+        {/* Logo: only when the shop uploaded one. Sits above the cover so it's never cut off. */}
+        {shop.logo && (
+          <div
+            data-testid="shop-logo"
+            className="relative z-10 -mt-7 mb-1 w-9 h-9 rounded-full border-2 border-white bg-white overflow-hidden shadow"
+          >
             <img src={shop.logo} alt="" className="w-full h-full object-cover" loading="lazy" />
-          ) : (
-            shop.name.charAt(0).toUpperCase()
-          )}
-        </div>
+          </div>
+        )}
 
-        <div className="flex items-center gap-1 mt-1.5">
-          <h3 className="text-[15px] font-bold text-[#1A1D1F] truncate">{shop.name}</h3>
-          {shop.verified && <BadgeCheck size={15} color="#1A73E8" className="flex-shrink-0" />}
+        <div className="flex items-center gap-1">
+          <h3 className="text-[13px] font-bold text-[#1A1D1F] truncate">{shop.name}</h3>
+          {shop.verified && <BadgeCheck size={13} color="#1A73E8" className="flex-shrink-0" />}
         </div>
 
         {where && (
-          <div className="flex items-center gap-1 mt-0.5 text-xs text-[#6B7280]">
-            <MapPin size={12} className="flex-shrink-0" />
+          <div className="flex items-center gap-1 mt-0.5 text-[11px] text-[#6B7280]">
+            <MapPin size={11} className="flex-shrink-0" />
             <span className="truncate">{where}</span>
           </div>
         )}
 
-        <div className="flex items-center justify-between mt-2">
-          <span className="text-xs text-[#6B7280]">
+        <div className="flex items-center gap-1 mt-1.5 text-[11px] text-[#6B7280]">
+          <Smartphone size={11} className="flex-shrink-0" />
+          <span>
             <b className="text-[#1A1D1F]">{shop.listingCount}</b> {shop.listingCount === 1 ? 'phone' : 'phones'}
-            {shop.distanceKm !== null && (
-              <>
-                {' · '}
-                <span className="text-[#1A73E8] font-semibold">{formatDistance(shop.distanceKm)}</span>
-              </>
-            )}
-          </span>
-          <span className="w-7 h-7 rounded-full bg-[#F5F7FA] flex items-center justify-center">
-            <ArrowRight size={14} color="#1A1D1F" />
           </span>
         </div>
+
+        {shop.distanceKm !== null && (
+          <div className="mt-0.5 text-[11px] font-semibold text-[#1A73E8]">{formatDistance(shop.distanceKm)}</div>
+        )}
       </div>
     </div>
   );
@@ -162,8 +162,8 @@ export default function NearbyShops({
 
       {loading ? (
         <div className="flex gap-3 px-4 overflow-hidden">
-          {[0, 1].map((i) => (
-            <div key={i} className="w-[80%] flex-shrink-0 h-[212px] rounded-2xl bg-white animate-pulse" />
+          {[0, 1, 2].map((i) => (
+            <div key={i} className={`${CARD_WIDTH} flex-shrink-0 h-[168px] rounded-2xl bg-white animate-pulse`} />
           ))}
         </div>
       ) : (

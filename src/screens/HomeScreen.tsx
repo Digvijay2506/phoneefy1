@@ -1,9 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Search, MapPin, Bell, TrendingUp } from 'lucide-react';
+import { Search, MapPin, Bell, TrendingUp, Layers } from 'lucide-react';
 import { phones, shops, formatPrice, loadCatalog, sortShopsNearMe } from '../data';
 import type { Phone } from '../data';
-import AdSlider from '../components/AdSlider';
 import BrandChip from '../components/BrandChip';
 import PhoneCard from '../components/PhoneCard';
 import SkeletonCard from '../components/SkeletonCard';
@@ -105,14 +104,10 @@ export default function HomeScreen({
         animate="show"
         className="flex-1 overflow-y-auto no-scrollbar pb-20"
       >
-        {/* Ad Slider */}
-        <motion.div variants={sectionItem} className="mt-5">
-          <AdSlider />
-        </motion.div>
-
         {/* Brands */}
         <motion.div variants={sectionItem} className="mt-5">
-          <div className="flex items-center justify-between px-4 mb-3">
+          <div className="flex items-center gap-2 px-4 mb-3">
+            <Layers size={16} color="#1A73E8" />
             <h2 className="text-base font-bold text-[#1A1D1F]">Browse by Brand</h2>
           </div>
           <BrandChip onTap={(brand) => onSearchTap(brand)} />

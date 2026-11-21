@@ -99,7 +99,7 @@ export interface PhoneRow {
 
 // ─── Small shared helpers ──────────────────────────────────────────────────────
 
-/** Compress an image File to max 800px wide and ~70% JPEG quality before uploading. */
+/** Shrink a photo to at most 1200px on its longest side, as a ~72% quality JPEG, before uploading. */
 async function compressImage(file: File): Promise<File> {
   return new Promise((resolve) => {
     const MAX_PX = 1200;
@@ -116,6 +116,9 @@ async function compressImage(file: File): Promise<File> {
       const canvas = document.createElement('canvas');
       canvas.width = width; canvas.height = height;
       const ctx = canvas.getContext('2d')!;
+      // JPEG has no transparency: paint white first so transparent PNG logos don't turn black
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, width, height);
       ctx.drawImage(img, 0, 0, width, height);
       canvas.toBlob(
         (blob) => {
