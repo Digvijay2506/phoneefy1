@@ -14,11 +14,13 @@ import { MoreHorizontal, Search, Filter, PlusCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function Shops() {
-  const { shops, updateShop } = useShops();
+  const { shops, updateShop, deleteShop } = useShops();
   const [, setLocation] = useLocation();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const { toast } = useToast();
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const filteredShops = shops.filter((shop) => {
     const matchesSearch =
@@ -43,6 +45,19 @@ export default function Shops() {
   const handleUnblock = (id: string, name: string) => {
     updateShop(id, { status: 'Verified', shopStatus: 'Active', accessEnabled: true });
     toast({ title: 'Shop unblocked', description: `${name} has been restored.` });
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    const outcome = await deleteShop(deleteTarget.id);
+    setDeleting(false);
+    if (outcome && 'error' in outcome) {
+      toast({ title: 'Could not delete shop', description: outcome.error, variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'Shop deleted', description: `${deleteTarget.name} and all its phone listings were removed.` });
+    setDeleteTarget(null);
   };
 
   const getStatusColor = (status: string) => {
@@ -170,6 +185,12 @@ export default function Shops() {
                             Unblock
                           </DropdownMenuItem>
                         )}
+                        <DropdownMenuItem
+                          className="text-destructive focus:bg-destructive/10 font-semibold"
+                          onClick={() => setDeleteTarget({ id: shop.id, name: shop.name })}
+                        >
+                          Delete shop
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </td>
@@ -191,6 +212,31 @@ export default function Shops() {
       <p className="text-xs text-muted-foreground text-right">
         Showing {filteredShops.length} of {shops.length} shops
       </p>
+
+      {/* Delete confirmation */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
+          <div role="dialog" aria-modal="true" className="bg-card border border-destructive/30 rounded-xl p-6 w-full max-w-md shadow-2xl space-y-4">
+            <h3 className="text-base font-semibold text-destructive">Delete shop — {deleteTarget.name}</h3>
+            <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 space-y-2">
+              <p className="text-sm font-semibold text-destructive">This is permanent and cannot be undone.</p>
+              <ul className="text-sm text-muted-foreground space-y-1 list-disc pl-4">
+                <li>All phone listings from this shop are deleted</li>
+                <li>The shopkeeper's login is removed</li>
+                <li>The shop disappears from the website immediately</li>
+              </ul>
+            </div>
+            <div className="flex gap-3 justify-end pt-1">
+              <Button variant="outline" className="border-border bg-card" onClick={() => setDeleteTarget(null)} disabled={deleting}>
+                Cancel
+              </Button>
+              <Button className="bg-destructive hover:bg-destructive/90 text-white" onClick={handleDelete} disabled={deleting}>
+                {deleting ? 'Deleting…' : 'Yes, delete shop'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -144,6 +144,7 @@ export default function ShopkeeperLoginScreen({ onLogin, onBack }: ShopkeeperLog
       <div className="relative flex items-center justify-center pt-14 pb-8 px-6">
         <button
           onClick={onBack}
+          aria-label="Back"
           className="btn-tap absolute left-4 w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center"
         >
           <ArrowLeft size={20} color="#1A1D1F" />

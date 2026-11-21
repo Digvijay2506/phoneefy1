@@ -4,6 +4,7 @@ import { useShopkeeperSession } from './contexts/ShopkeeperSessionContext';
 import { useCustomerSession } from './contexts/CustomerSessionContext';
 import { loadCatalog } from './data';
 import { useAppHistory } from './lib/useAppHistory';
+import { OPEN_SHOPKEEPER_LOGIN_EVENT } from './components/LoginPopup';
 
 // Components
 import BottomNav from './components/BottomNav';
@@ -124,6 +125,13 @@ export default function App() {
   };
 
   const { back } = useAppHistory<AppRoute>(route, applyRoute, !(sessionLoading || customerSessionLoading));
+
+  // The login popup's "Shopkeeper? Log in here" link
+  useEffect(() => {
+    const open = () => { setShowCustomerLogin(false); setShowLogin(true); };
+    window.addEventListener(OPEN_SHOPKEEPER_LOGIN_EVENT, open);
+    return () => window.removeEventListener(OPEN_SHOPKEEPER_LOGIN_EVENT, open);
+  }, []);
 
   // Bottom menu (Home / Search / Shops / Deals / Profile) — works from every customer page
   const goToTab = (tab: string) => {
@@ -371,6 +379,7 @@ export default function App() {
             activeTab={customerTab}
             onTabChange={goToTab}
             onPhoneTap={(phone: Phone) => setSelectedPhoneId(phone.id)}
+            onShopTap={(shopId) => setSelectedShopId(shopId)}
             onSearchTap={(query) => { setSearchQuery(query ?? ''); setCustomerTab('search'); }}
           />
         </div>

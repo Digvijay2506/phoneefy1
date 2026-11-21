@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import AdminApp from './admin/AdminApp';
 import CustomerApp from './CustomerApp';
+import LoginPopup from './components/LoginPopup';
 import { ShopkeeperSessionProvider } from './contexts/ShopkeeperSessionContext';
 import { CustomerSessionProvider } from './contexts/CustomerSessionContext';
 
@@ -21,6 +22,7 @@ export default function App() {
     <ShopkeeperSessionProvider>
       <CustomerSessionProvider>
         <CustomerApp />
+        <LoginPopup />
       </CustomerSessionProvider>
     </ShopkeeperSessionProvider>
   );

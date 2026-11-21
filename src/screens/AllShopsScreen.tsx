@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, Phone, Star, MessageCircle, Store, ArrowLeft } from 'lucide-react';
-import { shops, loadCatalog } from '../data';
+import { MapPin, Phone, MessageCircle, Store, ArrowLeft, BadgeCheck } from 'lucide-react';
+import { shops, loadCatalog, sortShopsNearMe, formatDistance } from '../data';
 import BottomNav from '../components/BottomNav';
+import { LocationChip } from '../components/NearbyShops';
+import { useUserLocation } from '../lib/useUserLocation';
 import { trackShopViewed, trackWhatsAppClick, trackCallClick } from '@/lib/analytics';
 
 interface AllShopsScreenProps {
@@ -23,7 +25,13 @@ const item = {
 };
 
 export default function AllShopsScreen({ activeTab, onTabChange, onBack, onShopTap }: AllShopsScreenProps) {
-  const [, forceRender] = useState(0);
+  const [loadedTick, forceRender] = useState(0);
+  const { coords, status: locationStatus, request: requestLocation } = useUserLocation();
+  // Nearest first once the customer shares their location
+  const ordered = useMemo(
+    () => sortShopsNearMe(shops, coords),
+    [loadedTick, coords], // eslint-disable-line react-hooks/exhaustive-deps
+  );
 
   useEffect(() => {
     let mounted = true;
@@ -57,48 +65,58 @@ export default function AllShopsScreen({ activeTab, onTabChange, onBack, onShopT
         </div>
         <div>
           <h1 className="text-lg font-bold text-white">All Shops</h1>
-          <p className="text-xs text-white/60">{shops.length} verified shops near you</p>
+          <p className="text-xs text-white/60">{ordered.length} {ordered.length === 1 ? 'shop' : 'shops'} on Phoneefy</p>
         </div>
       </motion.div>
+
+      <div className="px-4 pt-3">
+        <LocationChip status={locationStatus} onRequest={requestLocation} />
+      </div>
 
       <motion.div
         variants={container}
         initial="hidden"
         animate="show"
-        className="flex-1 px-4 pt-4 pb-24 space-y-3"
+        className="flex-1 px-4 pt-3 pb-24 space-y-3"
       >
-        {shops.map((shop) => (
+        {ordered.map((shop) => (
           <motion.div
             key={shop.id}
             variants={item}
             whileHover={{ y: -2, boxShadow: '0 10px 24px rgba(15,23,42,0.10)' }}
             whileTap={{ scale: 0.985 }}
             onClick={() => { onShopTap(shop.id); trackShopViewed(shop.name, shop.distance); }}
-            className="bg-white rounded-2xl shadow-sm p-4 cursor-pointer"
+            className="bg-white rounded-2xl shadow-sm p-4 cursor-pointer overflow-hidden"
           >
+            {shop.coverImage && (
+              <div className="-mx-4 -mt-4 mb-3.5 h-28 bg-[#E8ECF0]">
+                <img src={shop.coverImage} alt="" className="w-full h-full object-cover" loading="lazy" />
+              </div>
+            )}
             <div className="flex items-start gap-3.5">
               {/* Avatar */}
               <div
-                className="w-14 h-14 rounded-xl flex items-center justify-center text-xl font-bold text-white flex-shrink-0"
+                className="w-14 h-14 rounded-xl flex items-center justify-center text-xl font-bold text-white flex-shrink-0 overflow-hidden"
                 style={{ background: 'linear-gradient(135deg, #1A73E8, #0D47A1)' }}
               >
-                {shop.name.charAt(0)}
+                {shop.logo ? <img src={shop.logo} alt="" className="w-full h-full object-cover" loading="lazy" /> : shop.name.charAt(0)}
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="text-sm font-bold text-[#1A1D1F] truncate">{shop.name}</h3>
-                <div className="flex items-center gap-1 mt-0.5">
-                  <Star size={12} fill="#F59E0B" color="#F59E0B" />
-                  <span className="text-xs font-semibold text-[#1A1D1F]">{shop.rating}</span>
-                  <span className="text-xs text-[#9CA3AF]">• {shop.listingCount} phones</span>
+                <div className="flex items-center gap-1">
+                  <h3 className="text-sm font-bold text-[#1A1D1F] truncate">{shop.name}</h3>
+                  {shop.verified && <BadgeCheck size={14} color="#1A73E8" className="flex-shrink-0" />}
                 </div>
+                <p className="text-xs text-[#9CA3AF] mt-0.5">{shop.listingCount} {shop.listingCount === 1 ? 'phone' : 'phones'} listed</p>
                 <div className="flex items-start gap-1 mt-1.5">
                   <MapPin size={12} color="#9CA3AF" className="mt-0.5 flex-shrink-0" />
                   <p className="text-xs text-[#6B7280] leading-relaxed">{shop.address}</p>
                 </div>
-                {shop.distance && (
+                {(shop.distanceKm !== null || shop.distance) && (
                   <div className="flex items-center gap-1 mt-1">
                     <MapPin size={11} color="#1A73E8" className="flex-shrink-0" />
-                    <span className="text-xs font-medium text-[#1A73E8]">{shop.distance}</span>
+                    <span className="text-xs font-medium text-[#1A73E8]">
+                      {shop.distanceKm !== null ? formatDistance(shop.distanceKm) : shop.distance}
+                    </span>
                   </div>
                 )}
               </div>

@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { ArrowLeft, Check, Battery, Phone, MessageCircle, Shield, Cpu, HardDrive, Zap, Box, X, Maximize2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Check, Battery, Phone, MessageCircle, Shield, Cpu, HardDrive, Zap, Box, X, Maximize2 } from 'lucide-react';
 import { getPhoneById, getShopById, formatPrice } from '../data';
 import StarRating from '../components/StarRating';
 import BottomNav from '../components/BottomNav';
+import ImageCarousel from '../components/ImageCarousel';
 import { trackPhoneViewed, trackPhoneImageSwiped, trackWhatsAppClick, trackCallClick } from '@/lib/analytics';
 
 interface DeviceDetailScreenProps {
@@ -35,12 +36,16 @@ export default function DeviceDetailScreen({ phoneId, activeTab, onTabChange, on
       <div className="relative w-full bg-gradient-to-br from-[#0D1B2A] to-[#1A3A5C]">
         {/* Main image */}
         <div className="relative w-full h-[400px]">
-          <img
-            src={allImages[activeImg]}
+          <ImageCarousel
+            images={allImages}
             alt={phone.name}
-            className="w-full h-full object-contain p-3 cursor-zoom-in transition-opacity duration-200"
-            onClick={() => setZoom(true)}
-            onError={(e) => { (e.target as HTMLImageElement).style.opacity = '0.1'; }}
+            index={activeImg}
+            onIndexChange={(i) => { setActiveImg(i); trackPhoneImageSwiped(phone.name, i); }}
+            onImageClick={() => setZoom(true)}
+            showDots={false}
+            arrows
+            className="h-full"
+            imgClassName="object-contain p-3 cursor-zoom-in"
           />
           <button
             onClick={onBack}
@@ -57,16 +62,18 @@ export default function DeviceDetailScreen({ phoneId, activeTab, onTabChange, on
           )}
           {/* Zoom hint */}
           <div className="absolute bottom-3 right-3 flex items-center gap-1 bg-black/40 text-white text-[10px] font-medium px-2 py-1 rounded-full pointer-events-none">
-            <Maximize2 size={10} /> Tap photo to zoom
+            <Maximize2 size={10} /> {allImages.length > 1 ? 'Swipe · tap to zoom' : 'Tap photo to zoom'}
           </div>
           {/* Dot indicator */}
           {allImages.length > 1 && (
-            <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
+            <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5 pointer-events-none">
               {allImages.map((_, i) => (
                 <button
                   key={i}
                   onClick={() => { setActiveImg(i); trackPhoneImageSwiped(phone.name, i); }}
-                  className="rounded-full transition-all"
+                  aria-label={`Photo ${i + 1}`}
+                  data-dot={i === activeImg ? 'active' : 'idle'}
+                  className="rounded-full transition-all pointer-events-auto"
                   style={{
                     width: i === activeImg ? 20 : 6,
                     height: 6,
@@ -215,12 +222,19 @@ export default function DeviceDetailScreen({ phoneId, activeTab, onTabChange, on
           className="fixed inset-0 z-[100] bg-black flex items-center justify-center"
           onClick={() => setZoom(false)}
         >
-          <img
-            src={allImages[activeImg]}
-            alt={phone.name}
-            className="max-w-full max-h-full object-contain select-none"
-            onClick={(e) => e.stopPropagation()}
-          />
+          {/* Swipe left/right through the photos, full screen */}
+          <div className="w-full h-full" onClick={(e) => e.stopPropagation()}>
+            <ImageCarousel
+              images={allImages}
+              alt={phone.name}
+              index={activeImg}
+              onIndexChange={setActiveImg}
+              showDots={false}
+              arrows
+              className="h-full"
+              imgClassName="object-contain"
+            />
+          </div>
           <button
             aria-label="Close photo"
             onClick={() => setZoom(false)}
@@ -229,25 +243,9 @@ export default function DeviceDetailScreen({ phoneId, activeTab, onTabChange, on
             <X size={22} color="white" />
           </button>
           {allImages.length > 1 && (
-            <>
-              <button
-                aria-label="Previous photo"
-                onClick={(e) => { e.stopPropagation(); setActiveImg((i) => (i - 1 + allImages.length) % allImages.length); }}
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/15 flex items-center justify-center"
-              >
-                <ChevronLeft size={24} color="white" />
-              </button>
-              <button
-                aria-label="Next photo"
-                onClick={(e) => { e.stopPropagation(); setActiveImg((i) => (i + 1) % allImages.length); }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/15 flex items-center justify-center"
-              >
-                <ChevronRight size={24} color="white" />
-              </button>
-              <div className="absolute bottom-8 left-0 right-0 text-center text-white/80 text-xs font-medium">
-                {activeImg + 1} / {allImages.length}
-              </div>
-            </>
+            <div className="absolute bottom-8 left-0 right-0 text-center text-white/80 text-xs font-medium pointer-events-none">
+              {activeImg + 1} / {allImages.length} · swipe for more
+            </div>
           )}
         </div>,
         document.body,

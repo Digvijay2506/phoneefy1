@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { Check } from 'lucide-react';
+import ImageCarousel from './ImageCarousel';
 import type { Phone } from '../data';
 import { formatPrice, getShopById } from '../data';
 
@@ -72,17 +73,12 @@ export default function PhoneCard({ phone, onTap, layout = 'grid' }: PhoneCardPr
       className="bg-white rounded-2xl shadow-sm overflow-hidden cursor-pointer"
     >
       <div className="w-full h-[190px] relative overflow-hidden bg-gradient-to-br from-[#F5F7FA] to-[#E8ECF0]">
-        <motion.img
-          src={phone.image}
+        {/* Swipe left/right to see more photos without opening the listing */}
+        <ImageCarousel
+          images={phone.images?.length ? phone.images : [phone.image]}
           alt={phone.name}
-          className="w-full h-full object-contain"
-          loading="lazy"
-          whileHover={{ scale: 1.08 }}
-          transition={{ duration: 0.45 }}
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.style.display = 'none';
-          }}
+          className="h-full"
+          imgClassName="object-contain p-1"
         />
         {phone.imeiVerified && (
           <span className="absolute top-2 left-2 inline-flex items-center gap-1 bg-[#1A7A4A] text-white px-2 py-1 rounded-md text-[9px] font-semibold">

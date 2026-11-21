@@ -1,18 +1,21 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Search, MapPin, Bell, TrendingUp } from 'lucide-react';
-import { phones, formatPrice, loadCatalog } from '../data';
+import { phones, shops, formatPrice, loadCatalog, sortShopsNearMe } from '../data';
 import type { Phone } from '../data';
 import AdSlider from '../components/AdSlider';
 import BrandChip from '../components/BrandChip';
 import PhoneCard from '../components/PhoneCard';
 import SkeletonCard from '../components/SkeletonCard';
 import BottomNav from '../components/BottomNav';
+import NearbyShops from '../components/NearbyShops';
+import { useUserLocation } from '../lib/useUserLocation';
 
 interface HomeScreenProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
   onPhoneTap: (phone: Phone) => void;
+  onShopTap: (shopId: string) => void;
   onSearchTap: (query?: string) => void;
 }
 
@@ -30,6 +33,7 @@ export default function HomeScreen({
   activeTab,
   onTabChange,
   onPhoneTap,
+  onShopTap,
   onSearchTap,
 }: HomeScreenProps) {
   const [loading, setLoading] = useState(true);
@@ -43,6 +47,13 @@ export default function HomeScreen({
   }, []);
 
   const featuredPhones = phones.slice(0, 6);
+
+  // Shops Near You: nearest first once the customer shares their location
+  const { coords, status: locationStatus, request: requestLocation } = useUserLocation();
+  const nearbyShops = useMemo(
+    () => sortShopsNearMe(shops, coords).slice(0, 8),
+    [loading, coords], // eslint-disable-line react-hooks/exhaustive-deps
+  );
 
   return (
     <div className="flex flex-col min-h-screen" style={{ background: '#F5F7FA' }}>
@@ -105,6 +116,18 @@ export default function HomeScreen({
             <h2 className="text-base font-bold text-[#1A1D1F]">Browse by Brand</h2>
           </div>
           <BrandChip onTap={(brand) => onSearchTap(brand)} />
+        </motion.div>
+
+        {/* Shops Near You */}
+        <motion.div variants={sectionItem} className="mt-5">
+          <NearbyShops
+            shops={nearbyShops}
+            loading={loading}
+            locationStatus={locationStatus}
+            onRequestLocation={requestLocation}
+            onShopTap={onShopTap}
+            onSeeAll={() => onTabChange('shops')}
+          />
         </motion.div>
 
         {/* Featured Phones */}

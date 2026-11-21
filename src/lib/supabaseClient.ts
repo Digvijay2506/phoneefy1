@@ -48,6 +48,9 @@ export interface ShopRow {
   access_enabled: boolean;
   password_needs_reset: boolean;
   avatar_url: string | null;
+  cover_image_url?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   total_listings: number;
   last_login: string | null;
   created_at: string;

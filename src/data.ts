@@ -32,7 +32,13 @@ export interface Shop {
   id: string;
   name: string;
   address: string;
-  distance: string; // no geo yet — shows the shop's city instead
+  distance: string; // the shop's city (shown when we don't know the customer's location)
+  city: string;
+  verified: boolean; // approved by the Phoneefy admin
+  coverImage: string | null; // storefront photo uploaded by the shopkeeper
+  logo: string | null;
+  lat: number | null;
+  lng: number | null;
   ownerName: string;
   phone: string;
   rating: number; // no review system yet — flat placeholder until built
@@ -112,6 +118,12 @@ function shopRowToShop(row: ShopRow, phoneIds: string[]): Shop {
     name: row.name,
     address: [row.address, row.city].filter(Boolean).join(', '),
     distance: row.city || '',
+    city: row.city || '',
+    verified: row.status === 'Verified',
+    coverImage: row.cover_image_url || null,
+    logo: row.avatar_url || null,
+    lat: typeof row.latitude === 'number' ? row.latitude : null,
+    lng: typeof row.longitude === 'number' ? row.longitude : null,
     ownerName: row.owner,
     phone: row.phone,
     rating: 4.5, // placeholder until a real review system exists
@@ -214,4 +226,47 @@ export function formatPrice(price: number): string {
 
 export function calculateEMI(price: number, months: number): number {
   return Math.ceil(price / months);
+}
+
+// ─── "Near me" helpers ────────────────────────────────────────────────────────
+
+export interface Coords { lat: number; lng: number }
+export type ShopWithDistance = Shop & { distanceKm: number | null };
+
+/** Straight-line distance between two points, in km (haversine formula). */
+export function distanceKm(a: Coords, b: Coords): number {
+  const R = 6371;
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const dLat = toRad(b.lat - a.lat);
+  const dLng = toRad(b.lng - a.lng);
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+
+export function formatDistance(km: number): string {
+  if (km < 1) return `${Math.max(50, Math.round((km * 1000) / 50) * 50)} m away`;
+  if (km < 10) return `${km.toFixed(1)} km away`;
+  return `${Math.round(km)} km away`;
+}
+
+/**
+ * Orders shops for the "Shops Near You" lists.
+ * - Customer location known: nearest first (shops that haven't set a location go last).
+ * - Not known: verified shops first, then the ones with the most phones.
+ */
+export function sortShopsNearMe(list: Shop[], me: Coords | null): ShopWithDistance[] {
+  const withDistance: ShopWithDistance[] = list.map((s) => ({
+    ...s,
+    distanceKm: me && s.lat !== null && s.lng !== null ? distanceKm(me, { lat: s.lat, lng: s.lng }) : null,
+  }));
+  return withDistance.sort((a, b) => {
+    if (a.distanceKm !== null && b.distanceKm !== null) return a.distanceKm - b.distanceKm;
+    if (a.distanceKm !== null) return -1;
+    if (b.distanceKm !== null) return 1;
+    if (a.verified !== b.verified) return a.verified ? -1 : 1;
+    if (a.listingCount !== b.listingCount) return b.listingCount - a.listingCount;
+    return a.name.localeCompare(b.name);
+  });
 }
